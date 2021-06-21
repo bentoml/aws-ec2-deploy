@@ -43,11 +43,9 @@ def get_instance_ip_from_scaling_group(autoscaling_group_names, region):
 def get_endpoints_from_instance_address(instances):
     all_endpoints = []
     for instance in instances:
-        if instance["state"] == 'InService':
+        if instance["state"] == "InService":
             all_endpoints.append(
-                "{ep}:{port}/".format(
-                    ep=instance["endpoint"], port=5000
-                )
+                "{ep}:{port}/".format(ep=instance["endpoint"], port=5000)
             )
 
     return all_endpoints
@@ -57,15 +55,15 @@ def describe_deployment(deployment_name, config_json):
     ec2_config = get_configuration_value(config_json)
     _, stack_name, _, _, _ = generate_ec2_resource_names(deployment_name)
 
-    cf_client = boto3.client('cloudformation', ec2_config['region'])
+    cf_client = boto3.client("cloudformation", ec2_config["region"])
     result = cf_client.describe_stacks(StackName=stack_name)
-    stack_info = result.get('Stacks')
-    outputs = stack_info[0].get('Outputs')
+    stack_info = result.get("Stacks")
+    outputs = stack_info[0].get("Outputs")
     info_json = {}
     outputs = {o["OutputKey"]: o["OutputValue"] for o in outputs}
     if "AutoScalingGroup" in outputs:
         info_json["InstanceDetails"] = get_instance_ip_from_scaling_group(
-            [outputs["AutoScalingGroup"]], ec2_config['region']
+            [outputs["AutoScalingGroup"]], ec2_config["region"]
         )
         info_json["Endpoints"] = get_endpoints_from_instance_address(
             info_json["InstanceDetails"]
@@ -79,12 +77,10 @@ def describe_deployment(deployment_name, config_json):
     print(json.dumps(info_json, indent=2))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) != 3:
-        raise Exception(
-            'Please provide deployment_name and configuration json'
-        )
+        raise Exception("Please provide deployment_name and configuration json")
     deployment_name = sys.argv[1]
-    config_json = sys.argv[2] if sys.argv[2] else 'ec2_config.json'
+    config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
 
     describe_deployment(deployment_name, config_json)

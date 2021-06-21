@@ -44,13 +44,9 @@ def generate_aws_compatible_string(*items, max_length=63):
 
 
 def generate_ec2_resource_names(name):
-    sam_template_name = generate_aws_compatible_string(
-        f"{name}-template"
-    )
-    deployment_stack_name = generate_aws_compatible_string(
-        f"{name}-stack"
-    )
-    s3_bucket_name = generate_aws_compatible_string(f'{name}-storage')
+    sam_template_name = generate_aws_compatible_string(f"{name}-template")
+    deployment_stack_name = generate_aws_compatible_string(f"{name}-stack")
+    s3_bucket_name = generate_aws_compatible_string(f"{name}-storage")
     repo_name = generate_aws_compatible_string(f"{name}-repo")
     elb_name = generate_aws_compatible_string(f"{name}-elb", max_length=32)
 
@@ -58,7 +54,7 @@ def generate_ec2_resource_names(name):
 
 
 def generate_docker_image_tag(registry_uri, bento_name, bento_version):
-    image_tag = f'{bento_name}-{bento_version}'.lower()
+    image_tag = f"{bento_name}-{bento_version}".lower()
     return f"{registry_uri}:{image_tag}"
 
 
@@ -80,21 +76,21 @@ def generate_user_data_script(registry, image_tag, region, port=5000):
 
 
 def generate_cloudformation_template_file(
-        project_dir,
-        user_data,
-        s3_bucket_name,
-        sam_template_name,
-        elb_name,
-        ami_id,
-        instance_type,
-        autoscaling_min_size,
-        autoscaling_desired_capacity,
-        autoscaling_max_size,
-        health_check_interval_seconds,
-        health_check_path,
-        health_check_port,
-        health_check_timeout_seconds,
-        healthy_threshold_count,
+    project_dir,
+    user_data,
+    s3_bucket_name,
+    sam_template_name,
+    elb_name,
+    ami_id,
+    instance_type,
+    autoscaling_min_size,
+    autoscaling_desired_capacity,
+    autoscaling_max_size,
+    health_check_interval_seconds,
+    health_check_path,
+    health_check_port,
+    health_check_timeout_seconds,
+    healthy_threshold_count,
 ):
     """
     Create and save cloudformation template for deployment
