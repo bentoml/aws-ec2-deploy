@@ -16,7 +16,6 @@ def delete_deployment(deployment_name, config_json):
     cf_client.delete_stack(StackName=stack_name)
 
     # delete ecr repository
-    print("Delete ECR repo")
     ecr_client = boto3.client("ecr", ec2_config["region"])
     try:
         print(f"Delete ECR repo {repo_name}")

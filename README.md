@@ -1,5 +1,10 @@
 # BentoML AWS EC2 deployment tool
 
+[![Generic badge](https://img.shields.io/badge/Release-Alpha-<COLOR>.svg)](https://shields.io/)
+
+AWS EC2 is a great choice for deploying containerized and load balanced services in the cloud.
+Its ability to autoscale and automated health checking features make it attractive to
+users who want to reduce cost and want to horizontally scale base on traffic.
 
 ## Prerequisites
 
@@ -18,23 +23,25 @@
 ### Create a deployment
 
 Use command line
+
 ```bash
-$ python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ec2_config.json>
+python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ec2_config.json>
 ```
 
 Example:
+
 ```bash
-$ MY_BUNDLE_PATH=${bentoml get IrisClassifier:latest --print-location -q)
-$ python deploy.py $MY_BUNDLE_PATH my_first_deployment ec2_config.json
+MY_BUNDLE_PATH=${bentoml get IrisClassifier:latest --print-location -q)
+python deploy.py $MY_BUNDLE_PATH my_first_deployment ec2_config.json
 ```
 
 Use Python API
+
 ```python
 from deploy import deploy_to_ec2
 
 deploy_to_ec2(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
 ```
-
 
 #### Available configuration options for EC2 deployments
 
@@ -52,29 +59,31 @@ deploy_to_ec2(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
   * `health_check_timeout_seconds`: The amount of time, in seconds, during which no response means a failed health check.
   * `healthy_threshold_count`: The number of consecutive health checks successes required before moving the instance to the Healthy state. Valid Range: Minimum value of 2. Maximum value of 10.
 
-
 ### Update a deployment
 
 Use command line
+
 ```bash
-$ python update.py <Bento_bundle_path> <Deployment_name> <Config_JSON>
+python update.py <Bento_bundle_path> <Deployment_name> <Config_JSON>
 ```
 
 Use Python API
+
 ```python
 from update import update_deployment
 update_deployment(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
 ```
 
-### Describe deployment status and information
+### Get deployment's status and information
 
 Use command line
+
 ```bash
-$ python describe.py <Deployment_name> <Config_JSON>
+python describe.py <Deployment_name> <Config_JSON>
 ```
 
-
 Use Python API
+
 ```python
 from describe import describe_deployment
 describe_deployment(DEPLOYMENT_NAME, CONFIG_JSON)
@@ -83,11 +92,13 @@ describe_deployment(DEPLOYMENT_NAME, CONFIG_JSON)
 ### Delete deployment
 
 Use command line
+
 ```bash
-$ python delete.py <Deployment_name> <Config_JSON>
+python delete.py <Deployment_name> <Config_JSON>
 ```
 
 Use Python API
+
 ```python
 from  delete import delete_deployment
 delete_deployment(DEPLOYMENT_NAME, CONFIG_JSON)
