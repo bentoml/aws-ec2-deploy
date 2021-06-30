@@ -17,6 +17,84 @@ users who want to reduce cost and want to horizontally scale base on traffic.
 - Install required python packages
     - `$ pip install -r requirements.txt`
 
+## Deploy IrisClassifier from Bentoml quick start guide to AWS EC2
+
+1. Build and save Bento Bundle from [BentoML quick start guide](https://github.com/bentoml/BentoML/blob/master/guides/quick-start/bentoml-quick-start-guide.ipynb)
+
+2. Create Sagemaker deployment with the deployment tool
+
+    Run deploy script in the command line:
+
+    ```bash
+    $ BENTO_BUNDLE_PATH=$(bentoml get IrisClassifier:latest --print-location -q)
+    $ python deploy.py $BENTO_BUNDLE_PATH my-first-ec2-deployment ec2_config.json
+
+    # Sample output
+    Creating S3 bucket for cloudformation
+    Build and push image to ECR
+    Generate CF template
+    Build CF template
+    Deploy EC2
+    ```
+
+
+
+    Get EC2 deployment information and status
+
+    ```bash
+    $ python describe.py my-first-ec2-deployment
+
+    # Sample output
+    {
+      "InstanceDetails": [
+        {
+          "instance_id": "i-03ff2d1b9b717a109",
+          "endpoint": "3.101.38.18",
+          "state": "InService",
+          "health_status": "Healthy"
+        }
+      ],
+      "Endpoints": [
+        "3.101.38.18:5000/"
+      ],
+      "S3Bucket": "my-ec2-deployment-storage",
+      "TargetGroup": "arn:aws:elasticloadbalancing:us-west-1:192023623294:targetgroup/my-ec-Targe-3G36XKKIJZV9/d773b029690c84d3",
+      "Url": "http://my-ec2-deployment-elb-2078733703.us-west-1.elb.amazonaws.com"
+    }
+    ```
+
+3. Make sample request against deployed service
+
+    ```bash
+    $ curl -i \
+      --header "Content-Type: application/json" \
+      --request POST \
+      --data '[[5.1, 3.5, 1.4, 0.2]]' \
+      https://ps6f0sizt8.execute-api.us-west-2.amazonaws.com/predict
+
+    # Sample output
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Content-Length: 3
+    Connection: keep-alive
+    Date: Tue, 21 Jan 2020 22:43:17 GMT
+    x-amzn-RequestId: f49d29ed-c09c-4870-b362-4cf493556cf4
+    x-amz-apigw-id: GrC0AEHYPHcF3aA=
+    X-Amzn-Trace-Id: Root=1-5e277e7f-e9c0e4c0796bc6f4c36af98c;Sampled=0
+    X-Cache: Miss from cloudfront
+    Via: 1.1 bb248e7fabd9781d3ed921f068507334.cloudfront.net (CloudFront)
+    X-Amz-Cf-Pop: SFO5-C1
+    X-Amz-Cf-Id: HZzIJUcEUL8aBI0KcmG35rsG-71KSOcLUNmuYR4wdRb6MZupv9IOpA==
+
+    [0]%
+    ```
+
+4. Delete EC2 deployment
+
+    ```bash
+    python delete.py my-first-ec2-deployment
+    ```
+
 
 ## Deployment operations
 
