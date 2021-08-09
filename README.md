@@ -136,6 +136,7 @@ deploy_to_ec2(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
   * `health_check_port`: Health check port. Default is `5000`
   * `health_check_timeout_seconds`: The amount of time, in seconds, during which no response means a failed health check.
   * `healthy_threshold_count`: The number of consecutive health checks successes required before moving the instance to the Healthy state. Valid Range: Minimum value of 2. Maximum value of 10.
+* `environment_variables`: This takes a dictionary of variable, value pairs that are passed into docker as environment variables. If you want to pass bentoml specific environment variable use this. eg `environment_variables: {'BENTOML_MB_MAX_BATCH_SIZE': '300'}`
 
 ### Update a deployment
 

@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+
 from bentoml.saved_bundle import load_bento_service_metadata
 from utils import (
     get_configuration_value,
@@ -9,6 +11,7 @@ from utils import (
     push_docker_image_to_repository,
     create_s3_bucket_if_not_exists,
     run_shell_command,
+    console,
 )
 from ec2 import (
     generate_docker_image_tag,
@@ -20,7 +23,6 @@ from ec2 import (
 
 def update_deployment(bento_bundle_path, deployment_name, config_json):
     bento_metadata = load_bento_service_metadata(bento_bundle_path)
-
     ec2_config = get_configuration_value(config_json)
     (
         template_name,
@@ -29,30 +31,46 @@ def update_deployment(bento_bundle_path, deployment_name, config_json):
         repo_name,
         elb_name,
     ) = generate_ec2_resource_names(deployment_name)
+    project_path = os.path.join(
+        os.path.curdir, f"{bento_metadata.name}-{bento_metadata.version}-deployable"
+    )
+    # if deployable exists overide it with the latest deployable (no question asked)
+    try:
+        os.mkdir(project_path)
+    except FileExistsError:
+        console.print(
+            f"Existing deployable [b][{bento_metadata.name}-{bento_metadata.version}"
+            "-deployable][/b] found, Overriding"
+        )
+        shutil.rmtree(project_path)
+        os.mkdir(project_path)
 
     print("Creating S3 bucket for cloudformation")
     create_s3_bucket_if_not_exists(s3_bucket_name, ec2_config["region"])
 
-    print("Build and push image to ECR")
-    repository_id, registry_url = create_ecr_repository_if_not_exists(
-        ec2_config["region"], repo_name
-    )
-    _, username, password = get_ecr_login_info(ec2_config["region"], repository_id)
-    ecr_tag = generate_docker_image_tag(
-        registry_url, bento_metadata.name, bento_metadata.version
-    )
-    build_docker_image(context_path=bento_bundle_path, image_tag=ecr_tag)
-    push_docker_image_to_repository(
-        repository=ecr_tag, username=username, password=password
-    )
-    print("Generate CF template")
+    with console.status("Building image"):
+        repository_id, registry_url = create_ecr_repository_if_not_exists(
+            ec2_config["region"], repo_name
+        )
+        _, username, password = get_ecr_login_info(ec2_config["region"], repository_id)
+        ecr_tag = generate_docker_image_tag(
+            registry_url, bento_metadata.name, bento_metadata.version
+        )
+        build_docker_image(context_path=bento_bundle_path, image_tag=ecr_tag)
+
+    with console.status("Pushing image to ECR"):
+        push_docker_image_to_repository(
+            repository=ecr_tag, username=username, password=password
+        )
+    console.print("Image built and pushed")
+
+    # Generate CloudFormation template
     encoded_user_data = generate_user_data_script(
-        registry=registry_url, image_tag=ecr_tag, region=ec2_config["region"],
+        registry=registry_url,
+        image_tag=ecr_tag,
+        region=ec2_config["region"],
+        env_vars=ec2_config.get("environment_variables", {}),
     )
-    project_path = os.path.join(
-        os.path.curdir, f"{bento_metadata.name}-{bento_metadata.version}-deployable"
-    )
-    os.mkdir(project_path)
     generate_cloudformation_template_file(
         project_dir=project_path,
         user_data=encoded_user_data,
@@ -74,40 +92,45 @@ def update_deployment(bento_bundle_path, deployment_name, config_json):
     )
     copied_env = os.environ.copy()
     copied_env["AWS_DEFAULT_REGION"] = ec2_config["region"]
+    print("Generated CF template")
 
-    print("Build CF template")
-    run_shell_command(
-        command=["sam", "build", "-t", template_name], cwd=project_path, env=copied_env,
-    )
-    run_shell_command(
-        command=[
-            "sam",
-            "package",
-            "--output-template-file",
-            "packaged.yaml",
-            "--s3-bucket",
-            s3_bucket_name,
-        ],
-        cwd=project_path,
-        env=copied_env,
-    )
-    print("Deploy EC2")
-    run_shell_command(
-        command=[
-            "sam",
-            "deploy",
-            "--template-file",
-            "packaged.yaml",
-            "--stack-name",
-            stack_name,
-            "--capabilities",
-            "CAPABILITY_IAM",
-            "--s3-bucket",
-            s3_bucket_name,
-        ],
-        cwd=project_path,
-        env=copied_env,
-    )
+    with console.status("Building CF template"):
+        run_shell_command(
+            command=["sam", "build", "-t", template_name],
+            cwd=project_path,
+            env=copied_env,
+        )
+        run_shell_command(
+            command=[
+                "sam",
+                "package",
+                "--output-template-file",
+                "packaged.yaml",
+                "--s3-bucket",
+                s3_bucket_name,
+            ],
+            cwd=project_path,
+            env=copied_env,
+        )
+        console.print("Built CF template")
+
+    with console.status("Updating EC2"):
+        run_shell_command(
+            command=[
+                "sam",
+                "deploy",
+                "--template-file",
+                "packaged.yaml",
+                "--stack-name",
+                stack_name,
+                "--capabilities",
+                "CAPABILITY_IAM",
+                "--s3-bucket",
+                s3_bucket_name,
+            ],
+            cwd=project_path,
+            env=copied_env,
+        )
 
 
 if __name__ == "__main__":
@@ -120,3 +143,4 @@ if __name__ == "__main__":
     config_json = sys.argv[3] if sys.argv[3] else "ec2_config.json"
 
     update_deployment(bento_bundle_path, deployment_name, config_json)
+    console.print("[bold green]Update Complete!")

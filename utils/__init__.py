@@ -1,8 +1,14 @@
-import boto3
 import base64
 import json
 import subprocess
+
+import boto3
 import docker
+from rich.console import Console
+
+
+# The Rich console to be used in the scripts for pretty printing
+console = Console()
 
 
 def run_shell_command(command, cwd=None, env=None, shell_mode=False):
