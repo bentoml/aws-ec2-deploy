@@ -13,5 +13,9 @@
     "health_check_port": 5000,
     "health_check_timeout_seconds": 3,
     "healthy_threshold_count": 2
+  },
+  "environment_variables": {
+    "var": "value",
+    "another_var": "value"
   }
 }

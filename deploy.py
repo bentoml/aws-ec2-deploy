@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+
 from bentoml.saved_bundle import load_bento_service_metadata
 from utils import (
     get_configuration_value,
@@ -30,6 +32,24 @@ def deploy_to_ec2(bento_bundle_path, deployment_name, config_json):
         elb_name,
     ) = generate_ec2_resource_names(deployment_name)
 
+    # make deployable folder and overide if found according to user pref
+    project_path = os.path.join(
+        os.path.curdir, f"{bento_metadata.name}-{bento_metadata.version}-deployable"
+    )
+    try:
+        os.mkdir(project_path)
+    except FileExistsError:
+        response = input(
+            f"Existing deployable [{bento_metadata.name}-{bento_metadata.version}"
+            "-deployable] found! Override? (y/n): "
+        )
+        if response.lower() in ["yes", "y", ""]:
+            print("overiding existing deployable")
+            shutil.rmtree(project_path)
+            os.mkdir(project_path)
+        elif response.lower() in ["no", "n"]:
+            print('Using existing deployable')
+
     print("Creating S3 bucket for cloudformation")
     create_s3_bucket_if_not_exists(s3_bucket_name, ec2_config["region"])
 
@@ -45,14 +65,15 @@ def deploy_to_ec2(bento_bundle_path, deployment_name, config_json):
     push_docker_image_to_repository(
         repository=ecr_tag, username=username, password=password
     )
+
     print("Generate CF template")
     encoded_user_data = generate_user_data_script(
-        registry=registry_url, image_tag=ecr_tag, region=ec2_config["region"],
+        registry=registry_url,
+        image_tag=ecr_tag,
+        region=ec2_config["region"],
+        env_vars=ec2_config.get("environment_variables", {}),
     )
-    project_path = os.path.join(
-        os.path.curdir, f"{bento_metadata.name}-{bento_metadata.version}-deployable"
-    )
-    os.mkdir(project_path)
+
     generate_cloudformation_template_file(
         project_dir=project_path,
         user_data=encoded_user_data,
@@ -77,7 +98,9 @@ def deploy_to_ec2(bento_bundle_path, deployment_name, config_json):
 
     print("Build CF template")
     run_shell_command(
-        command=["sam", "build", "-t", template_name], cwd=project_path, env=copied_env,
+        command=["sam", "build", "-t", template_name],
+        cwd=project_path,
+        env=copied_env,
     )
     run_shell_command(
         command=[
