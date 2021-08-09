@@ -1,3 +1,4 @@
 bentoml
 boto3
 docker
+rich

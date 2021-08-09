@@ -3,7 +3,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from ec2 import generate_ec2_resource_names
-from utils import get_configuration_value
+from utils import get_configuration_value, console
 
 
 def delete_deployment(deployment_name, config_json):
@@ -12,13 +12,13 @@ def delete_deployment(deployment_name, config_json):
         deployment_name
     )
     cf_client = boto3.client("cloudformation", ec2_config["region"])
-    print(f"Delete CloudFormation Stack {stack_name}")
+    console.print(f"Delete CloudFormation Stack [b]{stack_name}[/b]")
     cf_client.delete_stack(StackName=stack_name)
 
     # delete ecr repository
     ecr_client = boto3.client("ecr", ec2_config["region"])
     try:
-        print(f"Delete ECR repo {repo_name}")
+        console.print(f"Delete ECR repo [b]{repo_name}[/b]")
         ecr_client.delete_repository(repositoryName=repo_name, force=True)
     except ClientError as e:
         # raise error, if the repo can't be found
@@ -29,7 +29,7 @@ def delete_deployment(deployment_name, config_json):
     s3_client = boto3.client("s3", ec2_config["region"])
     s3 = boto3.resource("s3")
     try:
-        print(f"Delete S3 bucket {s3_bucket_name}")
+        console.print(f"Delete S3 bucket [b]{s3_bucket_name}[/b]")
         s3.Bucket(s3_bucket_name).objects.all().delete()
         s3_client.delete_bucket(Bucket=s3_bucket_name)
     except ClientError as e:
@@ -48,3 +48,4 @@ if __name__ == "__main__":
     config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
 
     delete_deployment(deployment_name, config_json)
+    console.print(f"[bold green]Deleted {deployment_name}")
