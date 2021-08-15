@@ -120,5 +120,11 @@ def create_s3_bucket_if_not_exists(bucket_name, region):
                     s3_client.create_bucket(Bucket=bucket_name)
                 else:
                     raise s3_error
+        if error.response and error.response["Error"]["Code"] == "AccessDenied":
+            raise Exception(
+                " An error occurred (AccessDenied) when calling the"
+                f"GetBucketAcl operation on [{bucket_name}] bucket. Check if the you"
+                " own this bucket and that you have the permissions to access the same"
+            ) from error
         else:
             raise error
