@@ -51,7 +51,7 @@ def get_endpoints_from_instance_address(instances):
     return all_endpoints
 
 
-def describe_deployment(deployment_name, config_json):
+def describe(deployment_name, config_json):
     ec2_config = get_configuration_value(config_json)
     _, stack_name, _, _, _ = generate_ec2_resource_names(deployment_name)
 
@@ -74,7 +74,8 @@ def describe_deployment(deployment_name, config_json):
         info_json["TargetGroup"] = outputs["TargetGroup"]
     if "Url" in outputs:
         info_json["Url"] = outputs["Url"]
-    print(json.dumps(info_json, indent=2))
+
+    return info_json
 
 
 if __name__ == "__main__":
@@ -83,4 +84,5 @@ if __name__ == "__main__":
     deployment_name = sys.argv[1]
     config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
 
-    describe_deployment(deployment_name, config_json)
+    info_json = describe(deployment_name, config_json)
+    print(json.dumps(info_json, indent=2))

@@ -21,7 +21,7 @@ from ec2 import (
 )
 
 
-def update_deployment(bento_bundle_path, deployment_name, config_json):
+def update(bento_bundle_path, deployment_name, config_json):
     bento_metadata = load_bento_service_metadata(bento_bundle_path)
     ec2_config = get_configuration_value(config_json)
     (
@@ -142,5 +142,5 @@ if __name__ == "__main__":
     deployment_name = sys.argv[2]
     config_json = sys.argv[3] if sys.argv[3] else "ec2_config.json"
 
-    update_deployment(bento_bundle_path, deployment_name, config_json)
+    update(bento_bundle_path, deployment_name, config_json)
     console.print("[bold green]Update Complete!")

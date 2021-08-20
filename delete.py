@@ -6,7 +6,7 @@ from ec2 import generate_ec2_resource_names
 from utils import get_configuration_value, console
 
 
-def delete_deployment(deployment_name, config_json):
+def delete(deployment_name, config_json):
     ec2_config = get_configuration_value(config_json)
     _, stack_name, s3_bucket_name, repo_name, _ = generate_ec2_resource_names(
         deployment_name
@@ -47,5 +47,5 @@ if __name__ == "__main__":
     deployment_name = sys.argv[1]
     config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
 
-    delete_deployment(deployment_name, config_json)
+    delete(deployment_name, config_json)
     console.print(f"[bold green]Deleted {deployment_name}")
