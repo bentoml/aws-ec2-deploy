@@ -48,4 +48,4 @@ if __name__ == "__main__":
     config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
 
     delete(deployment_name, config_json)
-    console.print(f"[bold green]Deleted {deployment_name}")
+    console.print(f"[bold green]Deleted {deployment_name}!")

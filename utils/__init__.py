@@ -8,7 +8,7 @@ from rich.console import Console
 
 
 # The Rich console to be used in the scripts for pretty printing
-console = Console()
+console = Console(highlight=False)
 
 
 def run_shell_command(command, cwd=None, env=None, shell_mode=False):
