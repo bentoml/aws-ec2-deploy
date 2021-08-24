@@ -55,26 +55,33 @@ class Setup:
         # test_service.pack()
         test_service.save_to_dir(self.saved_dir)
 
+    @staticmethod
+    def check_if_up(url, num_attempts=5, wait_time=20):
+        attempt = 0
+        while attempt < num_attempts:
+            try:
+                if requests.get(url).ok:
+                    print("Ok!")
+                    return True
+                else:
+                    print("not Ok", end=" ")
+                    time.sleep(wait_time)
+            except Exception as e:
+                print(e)
+                time.sleep(wait_time)
+            finally:
+                attempt += 1
+        return False
+
     def make_deployment(self):
         deploy(self.saved_dir, self.deployment_name, self.config_file)
         info_json = describe(self.deployment_name, self.config_file)
         url = info_json["Url"] + "/{}"
 
         # ping /healthz to check if deployment is up
-        attempt = 0
-        print('Checking is service is up...', end='')
-        url_healthz = url.format('healthz')
-        while attempt < 5:
-            try:
-                if requests.get(url_healthz).ok:
-                    print('Ok!')
-                    break
-                else:
-                    time.sleep(20)
-            except Exception:
-                time.sleep(20)
-            finally:
-                attempt += 1
+        print("Checking is service is up...", end="")
+        url_healthz = url.format("healthz")
+        self.check_if_up(url_healthz, num_attempts=8, wait_time=60)
 
         return url
 
