@@ -1,24 +1,6 @@
-import os
 import sys
-import shutil
 
-from bentoml.saved_bundle import load_bento_service_metadata
-from utils import (
-    get_configuration_value,
-    create_ecr_repository_if_not_exists,
-    get_ecr_login_info,
-    build_docker_image,
-    push_docker_image_to_repository,
-    create_s3_bucket_if_not_exists,
-    run_shell_command,
-    console,
-)
-from ec2 import (
-    generate_docker_image_tag,
-    generate_ec2_resource_names,
-    generate_user_data_script,
-    generate_cloudformation_template_file,
-)
+from utils import console
 from deploy import deploy
 
 
