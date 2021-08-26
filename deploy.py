@@ -41,8 +41,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         os.mkdir(project_path)
     except FileExistsError:
         response = console.input(
-            f"Existing deployable [b][{bento_metadata.name}-{bento_metadata.version}"
-            "-deployable][/b] found! Override? (y/n): "
+            f"Existing deployable [[b]{project_path}[/b]] found! Override? (y/n): "
         )
         if response.lower() in ["yes", "y", ""]:
             print("overiding existing deployable!")
@@ -52,7 +51,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
             print("Using existing deployable!")
 
     create_s3_bucket_if_not_exists(s3_bucket_name, ec2_config["region"])
-    print("S3 bucket for cloudformation created")
+    console.print(f"S3 bucket for cloudformation created [[b]{s3_bucket_name}[/b]]")
 
     with console.status("Building image"):
         repository_id, registry_url = create_ecr_repository_if_not_exists(
@@ -68,7 +67,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         push_docker_image_to_repository(
             repository=ecr_tag, username=username, password=password
         )
-    console.print('Image built and pushed')
+    console.print(f"Image built and pushed [[b]{registry_url}[/b]]")
 
     encoded_user_data = generate_user_data_script(
         registry=registry_url,
@@ -77,7 +76,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         env_vars=ec2_config.get("environment_variables", {}),
     )
 
-    generate_cloudformation_template_file(
+    file_path = generate_cloudformation_template_file(
         project_dir=project_path,
         user_data=encoded_user_data,
         s3_bucket_name=s3_bucket_name,
@@ -98,9 +97,9 @@ def deploy(bento_bundle_path, deployment_name, config_json):
     )
     copied_env = os.environ.copy()
     copied_env["AWS_DEFAULT_REGION"] = ec2_config["region"]
-    print("Generated CF template")
+    console.print(f"Generated CF template [[b]{file_path}[/b]]")
 
-    with console.status('Building CF template'):
+    with console.status("Building CF template"):
         run_shell_command(
             command=["sam", "build", "-t", template_name],
             cwd=project_path,
@@ -118,9 +117,9 @@ def deploy(bento_bundle_path, deployment_name, config_json):
             cwd=project_path,
             env=copied_env,
         )
-        console.print('Built CF template')
+        console.print("Built CF template")
 
-    with console.status('Deploying to EC2'):
+    with console.status("Deploying to EC2"):
         run_shell_command(
             command=[
                 "sam",

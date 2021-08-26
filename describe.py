@@ -2,6 +2,8 @@ import sys
 import json
 import boto3
 
+from rich.pretty import pprint
+
 from ec2 import generate_ec2_resource_names
 from utils import get_configuration_value
 
@@ -85,4 +87,4 @@ if __name__ == "__main__":
     config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
 
     info_json = describe(deployment_name, config_json)
-    print(json.dumps(info_json, indent=2))
+    pprint(info_json)
