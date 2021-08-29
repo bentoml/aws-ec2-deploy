@@ -58,7 +58,9 @@ def generate_docker_image_tag(registry_uri, bento_name, bento_version):
     return f"{registry_uri}:{image_tag}"
 
 
-def generate_user_data_script(registry, image_tag, region, env_vars={}, port=5000):
+def generate_user_data_script(
+    registry, image_tag, region, env_vars={}, enable_gpus=False, port=5000
+):
     """
     Create init script for EC2 containers to download docker image,
     and run container on startup.
@@ -70,10 +72,15 @@ def generate_user_data_script(registry, image_tag, region, env_vars={}, port=500
     """
 
     env_vars_strings = []
-    env_vars_string = '--env {var}={value}'
+    env_vars_string = "--env {var}={value}"
 
     for var, value in env_vars.items():
         env_vars_strings.append(env_vars_string.format(var=var, value=value))
+
+    if enable_gpus is True:
+        gpu_flag = "--gpus all"
+    else:
+        gpu_flag = ""
 
     base_format = EC2_USER_INIT_SCRIPT.format(
         registry=registry,
@@ -81,6 +88,7 @@ def generate_user_data_script(registry, image_tag, region, env_vars={}, port=500
         region=region,
         bentoservice_port=port,
         env_vars=" ".join(env_vars_strings),
+        gpu_flag=gpu_flag,
     )
     encoded = base64.b64encode(base_format.encode("ascii")).decode("ascii")
     return encoded

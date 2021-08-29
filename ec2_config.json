@@ -6,6 +6,7 @@
     "max_size": 1
   },
   "instance_type": "t2.micro",
+  "enable_gpus": false,
   "ami_id": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
   "elb": {
     "health_check_interval_seconds": 5,
