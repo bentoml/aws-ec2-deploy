@@ -129,6 +129,7 @@ deploy_to_ec2(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
   * `desired_capacity`: The desired capacity for the auto scale group. Auto Scaling group will start by launching as many instances as are specified for desired capacity.
   * `max_size`: The maximum number of instances for the auto scale group
 * `instance_type`: Instance type for the EC2 deployment. See https://aws.amazon.com/ec2/instance-types/ for more info
+* `enable_gpus`: (Optional) To enable access to the GPUs if you're using GPU-accelerated instance_types.
 * `ami_id`: The Amazon machine image (AMI) used for launching EC2 instance. The default is `/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2`. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information.
 * `elb`:
   * `health_check_interval_seconds`: The approximate interval, in seconds, between health checks of an individual instance. Valid Range: Minimum value of 5. Maximum value of 300.
