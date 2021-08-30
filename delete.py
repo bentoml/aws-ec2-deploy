@@ -1,4 +1,7 @@
 import sys
+import os
+import argparse
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -40,12 +43,20 @@ def delete(deployment_name, config_json):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        raise Exception(
-            "Please provide deployment_name and configuration json as parameters"
-        )
-    deployment_name = sys.argv[1]
-    config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
+    parser = argparse.ArgumentParser(
+        description="Delete the bundle deployed on EC2",
+        epilog="Check out https://github.com/bentoml/aws-ec2-deploy#readme to know more",
+    )
+    parser.add_argument(
+        "deployment_name", help="The name you want to use for your deployment"
+    )
+    parser.add_argument(
+        "config_json",
+        help="(optional) The config file for your deployment",
+        default=os.path.join(os.getcwd(), "ec2_config.json"),
+        nargs="?",
+    )
+    args = parser.parse_args()
 
-    delete(deployment_name, config_json)
-    console.print(f"[bold green]Deleted {deployment_name}!")
+    delete(args.deployment_name, args.config_json)
+    console.print(f"[bold green]Deleted {args.deployment_name}!")
