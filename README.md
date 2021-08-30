@@ -1,10 +1,12 @@
 # BentoML AWS EC2 deployment tool
 
-[![Generic badge](https://img.shields.io/badge/Release-Alpha-<COLOR>.svg)](https://shields.io/)
-
 AWS EC2 is a great choice for deploying containerized and load balanced services in the cloud.
 Its ability to autoscale and automated health checking features make it attractive to
 users who want to reduce cost and want to horizontally scale base on traffic.
+
+<p align="center">
+    <img src="demo.gif" alt="demo of aws-ec2-deploy tool"/>
+</p>
 
 ## Prerequisites
 
@@ -13,7 +15,6 @@ users who want to reduce cost and want to horizontally scale base on traffic.
     - Configure AWS account instruction: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 - Docker is installed and running on the machine.
     - Install instruction: https://docs.docker.com/install
-
 - Install required python packages
     - `$ pip install -r requirements.txt`
 
@@ -21,22 +22,14 @@ users who want to reduce cost and want to horizontally scale base on traffic.
 
 1. Build and save Bento Bundle from [BentoML quick start guide](https://github.com/bentoml/BentoML/blob/master/guides/quick-start/bentoml-quick-start-guide.ipynb)
 
-2. Create Sagemaker deployment with the deployment tool
-
+2. Create EC2 deployment with the deployment tool. 
+    
     Run deploy script in the command line:
 
     ```bash
     $ BENTO_BUNDLE_PATH=$(bentoml get IrisClassifier:latest --print-location -q)
     $ python deploy.py $BENTO_BUNDLE_PATH my-first-ec2-deployment ec2_config.json
-
-    # Sample output
-    Creating S3 bucket for cloudformation
-    Build and push image to ECR
-    Generate CF template
-    Build CF template
-    Deploy EC2
     ```
-
 
 
     Get EC2 deployment information and status
@@ -92,7 +85,7 @@ users who want to reduce cost and want to horizontally scale base on traffic.
 4. Delete EC2 deployment
 
     ```bash
-    python delete.py my-first-ec2-deployment
+    $ python delete.py my-first-ec2-deployment
     ```
 
 
@@ -103,7 +96,7 @@ users who want to reduce cost and want to horizontally scale base on traffic.
 Use command line
 
 ```bash
-python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ec2_config.json>
+python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ./ec2_config.json>
 ```
 
 Example:
