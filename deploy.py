@@ -75,6 +75,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         image_tag=ecr_tag,
         region=ec2_config["region"],
         env_vars=ec2_config.get("environment_variables", {}),
+        enable_gpus=ec2_config.get('enable_gpus', False),
     )
 
     file_path = generate_cloudformation_template_file(

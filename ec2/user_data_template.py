@@ -16,7 +16,7 @@ runcmd:
 - ln -s /usr/bin/aws aws
 - aws ecr get-login-password --region {region}|docker login --username AWS --password-stdin {registry}
 - docker pull {tag}
-- docker run -p {bentoservice_port}:{bentoservice_port} {env_vars} {tag}
+- docker run -p {bentoservice_port}:{bentoservice_port} {gpu_flag} {env_vars} {tag}
 
 --==MYBOUNDARY==--
 """  # noqa: E501
