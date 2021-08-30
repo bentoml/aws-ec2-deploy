@@ -1,6 +1,8 @@
 import sys
 import json
 import boto3
+import os
+import argparse
 
 from rich.pretty import pprint
 
@@ -81,10 +83,20 @@ def describe(deployment_name, config_json):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        raise Exception("Please provide deployment_name and configuration json")
-    deployment_name = sys.argv[1]
-    config_json = sys.argv[2] if sys.argv[2] else "ec2_config.json"
+    parser = argparse.ArgumentParser(
+        description="Describe the bundle deployed on EC2",
+        epilog="Check out https://github.com/bentoml/aws-ec2-deploy#readme to know more",
+    )
+    parser.add_argument(
+        "deployment_name", help="The name you want to use for your deployment"
+    )
+    parser.add_argument(
+        "config_json",
+        help="(optional) The config file for your deployment",
+        default=os.path.join(os.getcwd(), "ec2_config.json"),
+        nargs="?",
+    )
+    args = parser.parse_args()
 
-    info_json = describe(deployment_name, config_json)
+    info_json = describe(args.deployment_name, args.config_json)
     pprint(info_json)

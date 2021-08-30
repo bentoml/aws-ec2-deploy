@@ -1,10 +1,12 @@
-# BentoML AWS EC2 deployment tool
-
-[![Generic badge](https://img.shields.io/badge/Release-Alpha-<COLOR>.svg)](https://shields.io/)
+# AWS EC2 deployment tool
 
 AWS EC2 is a great choice for deploying containerized and load balanced services in the cloud.
 Its ability to autoscale and automated health checking features make it attractive to
 users who want to reduce cost and want to horizontally scale base on traffic.
+
+<p align="center">
+    <img src="demo.gif" alt="demo of aws-ec2-deploy tool"/>
+</p>
 
 ## Prerequisites
 
@@ -13,7 +15,6 @@ users who want to reduce cost and want to horizontally scale base on traffic.
     - Configure AWS account instruction: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 - Docker is installed and running on the machine.
     - Install instruction: https://docs.docker.com/install
-
 - Install required python packages
     - `$ pip install -r requirements.txt`
 
@@ -21,22 +22,16 @@ users who want to reduce cost and want to horizontally scale base on traffic.
 
 1. Build and save Bento Bundle from [BentoML quick start guide](https://github.com/bentoml/BentoML/blob/master/guides/quick-start/bentoml-quick-start-guide.ipynb)
 
-2. Create Sagemaker deployment with the deployment tool
+2. Copy and change the [sample config file](ec2_config.json) given and change it according to your deployment specifications. Check out the [config section](#configuration-options) to find the different options available.
 
+3. Create EC2 deployment with the deployment tool. 
+    
     Run deploy script in the command line:
 
     ```bash
     $ BENTO_BUNDLE_PATH=$(bentoml get IrisClassifier:latest --print-location -q)
     $ python deploy.py $BENTO_BUNDLE_PATH my-first-ec2-deployment ec2_config.json
-
-    # Sample output
-    Creating S3 bucket for cloudformation
-    Build and push image to ECR
-    Generate CF template
-    Build CF template
-    Deploy EC2
     ```
-
 
 
     Get EC2 deployment information and status
@@ -63,7 +58,7 @@ users who want to reduce cost and want to horizontally scale base on traffic.
     }
     ```
 
-3. Make sample request against deployed service
+4. Make sample request against deployed service. The url for the endpoint given in the output of the describe command or you can also check the API Gateway through the AWS console.
 
     ```bash
     $ curl -i \
@@ -89,21 +84,39 @@ users who want to reduce cost and want to horizontally scale base on traffic.
     [0]%
     ```
 
-4. Delete EC2 deployment
+5. Delete EC2 deployment
 
     ```bash
-    python delete.py my-first-ec2-deployment
+    $ python delete.py my-first-ec2-deployment
     ```
 
 
 ## Deployment operations
+
+### Configuration options
+
+* `region`: AWS region for EC2 deployment
+* `ec2_auto_scale`:
+  * `min_size`:  The minimum number of instances for the auto scale group.
+  * `desired_capacity`: The desired capacity for the auto scale group. Auto Scaling group will start by launching as many instances as are specified for desired capacity.
+  * `max_size`: The maximum number of instances for the auto scale group
+* `instance_type`: Instance type for the EC2 deployment. See https://aws.amazon.com/ec2/instance-types/ for more info
+* `enable_gpus`: (Optional) To enable access to the GPUs if you're using GPU-accelerated instance_types.
+* `ami_id`: The Amazon machine image (AMI) used for launching EC2 instance. The default is `/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2`. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information.
+* `elb`:
+  * `health_check_interval_seconds`: The approximate interval, in seconds, between health checks of an individual instance. Valid Range: Minimum value of 5. Maximum value of 300.
+  * `health_check_path.`: The URL path for health check. Default is `/healthz`
+  * `health_check_port`: Health check port. Default is `5000`
+  * `health_check_timeout_seconds`: The amount of time, in seconds, during which no response means a failed health check.
+  * `healthy_threshold_count`: The number of consecutive health checks successes required before moving the instance to the Healthy state. Valid Range: Minimum value of 2. Maximum value of 10.
+* `environment_variables`: This takes a dictionary of variable, value pairs that are passed into docker as environment variables. If you want to pass bentoml specific environment variable use this. eg `environment_variables: {'BENTOML_MB_MAX_BATCH_SIZE': '300'}`
 
 ### Create a deployment
 
 Use command line
 
 ```bash
-python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ec2_config.json>
+python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ./ec2_config.json>
 ```
 
 Example:
@@ -121,23 +134,7 @@ from deploy import deploy_to_ec2
 deploy_to_ec2(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
 ```
 
-#### Available configuration options for EC2 deployments
 
-* `region`: AWS region for EC2 deployment
-* `ec2_auto_scale`:
-  * `min_size`:  The minimum number of instances for the auto scale group.
-  * `desired_capacity`: The desired capacity for the auto scale group. Auto Scaling group will start by launching as many instances as are specified for desired capacity.
-  * `max_size`: The maximum number of instances for the auto scale group
-* `instance_type`: Instance type for the EC2 deployment. See https://aws.amazon.com/ec2/instance-types/ for more info
-* `enable_gpus`: (Optional) To enable access to the GPUs if you're using GPU-accelerated instance_types.
-* `ami_id`: The Amazon machine image (AMI) used for launching EC2 instance. The default is `/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2`. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information.
-* `elb`:
-  * `health_check_interval_seconds`: The approximate interval, in seconds, between health checks of an individual instance. Valid Range: Minimum value of 5. Maximum value of 300.
-  * `health_check_path.`: The URL path for health check. Default is `/healthz`
-  * `health_check_port`: Health check port. Default is `5000`
-  * `health_check_timeout_seconds`: The amount of time, in seconds, during which no response means a failed health check.
-  * `healthy_threshold_count`: The number of consecutive health checks successes required before moving the instance to the Healthy state. Valid Range: Minimum value of 2. Maximum value of 10.
-* `environment_variables`: This takes a dictionary of variable, value pairs that are passed into docker as environment variables. If you want to pass bentoml specific environment variable use this. eg `environment_variables: {'BENTOML_MB_MAX_BATCH_SIZE': '300'}`
 
 ### Update a deployment
 
