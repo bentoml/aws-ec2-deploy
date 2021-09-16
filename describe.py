@@ -57,7 +57,7 @@ def get_endpoints_from_instance_address(instances):
 
 def describe(deployment_name, config_json):
     ec2_config = get_configuration_value(config_json)
-    _, stack_name, _, _, _ = generate_ec2_resource_names(deployment_name)
+    _, stack_name, _, _ = generate_ec2_resource_names(deployment_name)
 
     cf_client = boto3.client("cloudformation", ec2_config["region"])
     result = cf_client.describe_stacks(StackName=stack_name)
@@ -72,8 +72,6 @@ def describe(deployment_name, config_json):
         info_json["Endpoints"] = get_endpoints_from_instance_address(
             info_json["InstanceDetails"]
         )
-    if "S3Bucket" in outputs:
-        info_json["S3Bucket"] = outputs["S3Bucket"]
     if "TargetGroup" in outputs:
         info_json["TargetGroup"] = outputs["TargetGroup"]
     if "Url" in outputs:
