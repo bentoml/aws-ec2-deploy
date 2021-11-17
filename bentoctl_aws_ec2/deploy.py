@@ -1,10 +1,8 @@
 import os
-import sys
 import shutil
-import argparse
 
 from bentoml.saved_bundle import load_bento_service_metadata
-from utils import (
+from .utils import (
     get_configuration_value,
     create_ecr_repository_if_not_exists,
     get_ecr_login_info,
@@ -14,7 +12,7 @@ from utils import (
     run_shell_command,
     console,
 )
-from ec2 import (
+from .ec2 import (
     generate_docker_image_tag,
     generate_ec2_resource_names,
     generate_user_data_script,
@@ -75,7 +73,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         image_tag=ecr_tag,
         region=ec2_config["region"],
         env_vars=ec2_config.get("environment_variables", {}),
-        enable_gpus=ec2_config.get('enable_gpus', False),
+        enable_gpus=ec2_config.get("enable_gpus", False),
     )
 
     file_path = generate_cloudformation_template_file(
@@ -138,24 +136,3 @@ def deploy(bento_bundle_path, deployment_name, config_json):
             cwd=project_path,
             env=copied_env,
         )
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Deploy the bentoml bundle on EC2",
-        epilog="Check out https://github.com/bentoml/aws-ec2-deploy#readme to know more",
-    )
-    parser.add_argument("bento_bundle_path", help="Path to bentoml bundle")
-    parser.add_argument(
-        "deployment_name", help="The name you want to use for your deployment"
-    )
-    parser.add_argument(
-        "config_json",
-        help="(optional) The config file for your deployment",
-        default=os.path.join(os.getcwd(), "ec2_config.json"),
-        nargs="?",
-    )
-    args = parser.parse_args()
-
-    deploy(args.bento_bundle_path, args.deployment_name, args.config_json)
-    console.print("[bold green]Deployment Complete!")

@@ -1,12 +1,8 @@
-import sys
-import os
-import argparse
-
 import boto3
 from botocore.exceptions import ClientError
 
-from ec2 import generate_ec2_resource_names
-from utils import get_configuration_value, console
+from .ec2 import generate_ec2_resource_names
+from .utils import get_configuration_value, console
 
 
 def delete(deployment_name, config_json):
@@ -40,23 +36,3 @@ def delete(deployment_name, config_json):
             # If there is no bucket, we just let it silently fail, don't have to do
             # any thing
             raise e
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Delete the bundle deployed on EC2",
-        epilog="Check out https://github.com/bentoml/aws-ec2-deploy#readme to know more",
-    )
-    parser.add_argument(
-        "deployment_name", help="The name you want to use for your deployment"
-    )
-    parser.add_argument(
-        "config_json",
-        help="(optional) The config file for your deployment",
-        default=os.path.join(os.getcwd(), "ec2_config.json"),
-        nargs="?",
-    )
-    args = parser.parse_args()
-
-    delete(args.deployment_name, args.config_json)
-    console.print(f"[bold green]Deleted {args.deployment_name}!")
