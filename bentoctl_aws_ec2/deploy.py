@@ -20,10 +20,9 @@ from .ec2 import (
 )
 
 
-def deploy(bento_bundle_path, deployment_name, config_json):
+def deploy(bento_bundle_path, deployment_name, ec2_config):
     bento_metadata = load_bento_service_metadata(bento_bundle_path)
 
-    ec2_config = get_configuration_value(config_json)
     (
         template_name,
         stack_name,
