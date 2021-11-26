@@ -46,11 +46,10 @@ def generate_aws_compatible_string(*items, max_length=63):
 def generate_ec2_resource_names(name):
     sam_template_name = generate_aws_compatible_string(f"{name}-template")
     deployment_stack_name = generate_aws_compatible_string(f"{name}-stack")
-    s3_bucket_name = generate_aws_compatible_string(f"{name}-storage")
     repo_name = generate_aws_compatible_string(f"{name}-repo")
     elb_name = generate_aws_compatible_string(f"{name}-elb", max_length=32)
 
-    return sam_template_name, deployment_stack_name, s3_bucket_name, repo_name, elb_name
+    return sam_template_name, deployment_stack_name, repo_name, elb_name
 
 
 def generate_docker_image_tag(registry_uri, bento_name, bento_version):
@@ -97,7 +96,6 @@ def generate_user_data_script(
 def generate_cloudformation_template_file(
     project_dir,
     user_data,
-    s3_bucket_name,
     sam_template_name,
     elb_name,
     ami_id,
@@ -116,7 +114,6 @@ def generate_cloudformation_template_file(
     args:
         project_dir: path to save template file
         user_data: base64 encoded user data for cloud-init script
-        s3_bucket_name: AWS S3 bucket name
         sam_template_name: template name to save
         ami_id: ami id for EC2 container to use
         instance_type: EC2 instance type
@@ -140,7 +137,6 @@ def generate_cloudformation_template_file(
                 autoscaling_min_size=autoscaling_min_size,
                 autoscaling_desired_capacity=autoscaling_desired_capacity,
                 autoscaling_max_size=autoscaling_max_size,
-                s3_bucket_name=s3_bucket_name,
                 target_health_check_interval_seconds=health_check_interval_seconds,
                 target_health_check_path=health_check_path,
                 target_health_check_port=health_check_port,

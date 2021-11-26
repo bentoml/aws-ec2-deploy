@@ -204,9 +204,6 @@ Resources:
                 WillReplace: true
 
 Outputs:
-    S3Bucket:
-        Value: {s3_bucket_name}
-        Description: Bucket to store sam artifacts
     AutoScalingGroup:
         Value: !Ref AutoScalingGroup
         Description: Autoscaling group name

@@ -2,21 +2,20 @@ import os
 import shutil
 
 from bentoml.saved_bundle import load_bento_service_metadata
-from .utils import (
-    get_configuration_value,
-    create_ecr_repository_if_not_exists,
-    get_ecr_login_info,
-    build_docker_image,
-    push_docker_image_to_repository,
-    create_s3_bucket_if_not_exists,
-    run_shell_command,
-    console,
-)
+
 from .ec2 import (
+    generate_cloudformation_template_file,
     generate_docker_image_tag,
     generate_ec2_resource_names,
     generate_user_data_script,
-    generate_cloudformation_template_file,
+)
+from .utils import (
+    build_docker_image,
+    console,
+    create_ecr_repository_if_not_exists,
+    get_ecr_login_info,
+    push_docker_image_to_repository,
+    run_shell_command,
 )
 
 
@@ -26,7 +25,6 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
     (
         template_name,
         stack_name,
-        s3_bucket_name,
         repo_name,
         elb_name,
     ) = generate_ec2_resource_names(deployment_name)
@@ -47,9 +45,6 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
             os.mkdir(project_path)
         elif response.lower() in ["no", "n"]:
             print("Using existing deployable!")
-
-    create_s3_bucket_if_not_exists(s3_bucket_name, ec2_config["region"])
-    console.print(f"S3 bucket for cloudformation created [[b]{s3_bucket_name}[/b]]")
 
     with console.status("Building image"):
         repository_id, registry_url = create_ecr_repository_if_not_exists(
@@ -78,7 +73,6 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
     file_path = generate_cloudformation_template_file(
         project_dir=project_path,
         user_data=encoded_user_data,
-        s3_bucket_name=s3_bucket_name,
         sam_template_name=template_name,
         elb_name=elb_name,
         ami_id=ec2_config["ami_id"],
@@ -114,8 +108,6 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
                 "package",
                 "--output-template-file",
                 "packaged.yaml",
-                "--s3-bucket",
-                s3_bucket_name,
             ],
             cwd=project_path,
             env=copied_env,
@@ -133,8 +125,6 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
                 stack_name,
                 "--capabilities",
                 "CAPABILITY_IAM",
-                "--s3-bucket",
-                s3_bucket_name,
             ],
             cwd=project_path,
             env=copied_env,
