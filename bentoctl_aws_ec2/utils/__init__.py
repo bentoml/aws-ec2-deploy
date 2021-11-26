@@ -68,6 +68,7 @@ def build_docker_image(
     context_path, image_tag, dockerfile="Dockerfile", additional_build_args=None
 ):
     docker_client = docker.from_env()
+    context_path = str(context_path)
     try:
         docker_client.images.build(
             path=context_path,
@@ -120,5 +121,13 @@ def create_s3_bucket_if_not_exists(bucket_name, region):
                     s3_client.create_bucket(Bucket=bucket_name)
                 else:
                     raise s3_error
+        elif error.response and error.response["Error"]["Code"] == "AccessDenied":
+            error.response["Error"]["Message"] = (
+                "Access Denied. Please check if you have permissions to access "
+                f"'{bucket_name}' or configure an S3 bucket with access using "
+                "'s3bucket' config."
+            )
+            raise ClientError(error.response, "GetBucketAcl")
+
         else:
             raise error

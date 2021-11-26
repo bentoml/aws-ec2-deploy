@@ -49,8 +49,7 @@ def get_endpoints_from_instance_address(instances):
     return all_endpoints
 
 
-def describe(deployment_name, config_json):
-    ec2_config = get_configuration_value(config_json)
+def describe(deployment_name, ec2_config):
     _, stack_name, _, _, _ = generate_ec2_resource_names(deployment_name)
 
     cf_client = boto3.client("cloudformation", ec2_config["region"])

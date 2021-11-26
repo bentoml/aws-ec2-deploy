@@ -2,11 +2,10 @@ import boto3
 from botocore.exceptions import ClientError
 
 from .ec2 import generate_ec2_resource_names
-from .utils import get_configuration_value, console
+from .utils import console
 
 
-def delete(deployment_name, config_json):
-    ec2_config = get_configuration_value(config_json)
+def delete(deployment_name, ec2_config):
     _, stack_name, s3_bucket_name, repo_name, _ = generate_ec2_resource_names(
         deployment_name
     )

@@ -86,13 +86,17 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
         autoscaling_min_size=ec2_config["ec2_auto_scale"]["min_size"],
         autoscaling_desired_capacity=ec2_config["ec2_auto_scale"]["desired_capacity"],
         autoscaling_max_size=ec2_config["ec2_auto_scale"]["max_size"],
-        health_check_path=ec2_config["elb"]["health_check_path"],
-        health_check_port=ec2_config["elb"]["health_check_port"],
-        health_check_interval_seconds=ec2_config["elb"][
+        health_check_path=ec2_config["elastic_load_balancing"]["health_check_path"],
+        health_check_port=ec2_config["elastic_load_balancing"]["health_check_port"],
+        health_check_interval_seconds=ec2_config["elastic_load_balancing"][
             "health_check_interval_seconds"
         ],
-        health_check_timeout_seconds=ec2_config["elb"]["health_check_timeout_seconds"],
-        healthy_threshold_count=ec2_config["elb"]["healthy_threshold_count"],
+        health_check_timeout_seconds=ec2_config["elastic_load_balancing"][
+            "health_check_timeout_seconds"
+        ],
+        healthy_threshold_count=ec2_config["elastic_load_balancing"][
+            "healthy_threshold_count"
+        ],
     )
     copied_env = os.environ.copy()
     copied_env["AWS_DEFAULT_REGION"] = ec2_config["region"]
