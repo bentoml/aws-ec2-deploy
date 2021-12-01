@@ -2,8 +2,8 @@ import os
 import re
 import base64
 
-from ec2.user_data_template import EC2_USER_INIT_SCRIPT
-from ec2.ec2_cloudformation_template import EC2_CLOUDFORMATION_TEMPLATE
+from bentoctl_aws_ec2.ec2.user_data_template import EC2_USER_INIT_SCRIPT
+from bentoctl_aws_ec2.ec2.ec2_cloudformation_template import EC2_CLOUDFORMATION_TEMPLATE
 
 
 def generate_aws_compatible_string(*items, max_length=63):

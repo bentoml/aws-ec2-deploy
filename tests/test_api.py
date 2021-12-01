@@ -1,18 +1,17 @@
 import os
-import sys
 import shutil
+import sys
 import tempfile
 import time
 
 import requests
+from classifier import TestService
 from pandas import DataFrame
 
-from classifier import TestService
-
 sys.path.append("./")
-from deploy import deploy
-from describe import describe
-from delete import delete
+from bentoctl_aws_ec2.delete import delete
+from bentoctl_aws_ec2.deploy import deploy
+from bentoctl_aws_ec2.describe import describe
 
 
 class Setup:
@@ -26,28 +25,19 @@ class Setup:
         self.saved_dir = os.path.join(self.dirpath, "saved_dir")
 
         # make config file
-        config = """
-        {
-          "region": "us-west-1",
-          "ec2_auto_scale": {
-            "min_size": 1,
-            "desired_capacity": 1,
-            "max_size": 1
-          },
-          "instance_type": "t2.micro",
-          "ami_id": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
-          "elb": {
-            "health_check_interval_seconds": 5,
-            "health_check_path": "/healthz",
-            "health_check_port": 5000,
-            "health_check_timeout_seconds": 3,
-            "healthy_threshold_count": 2
-          }
+        self.ec2_config = {
+            "region": "us-west-1",
+            "ec2_auto_scale": {"min_size": 1, "desired_capacity": 1, "max_size": 1},
+            "instance_type": "t2.micro",
+            "ami_id": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
+            "elastic_load_balancing": {
+                "health_check_interval_seconds": 5,
+                "health_check_path": "/healthz",
+                "health_check_port": 5000,
+                "health_check_timeout_seconds": 3,
+                "healthy_threshold_count": 2,
+            },
         }
-        """
-        self.config_file = os.path.join(self.dirpath, "config.json")
-        with open(self.config_file, "w") as f:
-            f.write(config)
 
         # make bento service
         os.mkdir(self.saved_dir)
@@ -74,8 +64,8 @@ class Setup:
         return False
 
     def make_deployment(self):
-        deploy(self.saved_dir, self.deployment_name, self.config_file)
-        info_json = describe(self.deployment_name, self.config_file)
+        deploy(self.saved_dir, self.deployment_name, self.ec2_config)
+        info_json = describe(self.deployment_name, self.ec2_config)
         url = info_json["Url"] + "/{}"
 
         # ping /healthz to check if deployment is up
@@ -86,7 +76,7 @@ class Setup:
         return url
 
     def teardown(self):
-        delete(self.deployment_name, self.config_file)
+        delete(self.deployment_name, self.ec2_config)
         shutil.rmtree(self.dirpath)
         print("Removed {}!".format(self.dirpath))
 

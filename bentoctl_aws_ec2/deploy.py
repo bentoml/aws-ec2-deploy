@@ -1,30 +1,27 @@
 import os
-import sys
 import shutil
-import argparse
 
 from bentoml.saved_bundle import load_bento_service_metadata
-from utils import (
-    get_configuration_value,
-    create_ecr_repository_if_not_exists,
-    get_ecr_login_info,
-    build_docker_image,
-    push_docker_image_to_repository,
-    run_shell_command,
-    console,
-)
-from ec2 import (
+
+from .ec2 import (
+    generate_cloudformation_template_file,
     generate_docker_image_tag,
     generate_ec2_resource_names,
     generate_user_data_script,
-    generate_cloudformation_template_file,
+)
+from .utils import (
+    build_docker_image,
+    console,
+    create_ecr_repository_if_not_exists,
+    get_ecr_login_info,
+    push_docker_image_to_repository,
+    run_shell_command,
 )
 
 
-def deploy(bento_bundle_path, deployment_name, config_json):
+def deploy(bento_bundle_path, deployment_name, ec2_config):
     bento_metadata = load_bento_service_metadata(bento_bundle_path)
 
-    ec2_config = get_configuration_value(config_json)
     (
         template_name,
         stack_name,
@@ -70,7 +67,7 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         image_tag=ecr_tag,
         region=ec2_config["region"],
         env_vars=ec2_config.get("environment_variables", {}),
-        enable_gpus=ec2_config.get('enable_gpus', False),
+        enable_gpus=ec2_config.get("enable_gpus", False),
     )
 
     file_path = generate_cloudformation_template_file(
@@ -83,13 +80,17 @@ def deploy(bento_bundle_path, deployment_name, config_json):
         autoscaling_min_size=ec2_config["ec2_auto_scale"]["min_size"],
         autoscaling_desired_capacity=ec2_config["ec2_auto_scale"]["desired_capacity"],
         autoscaling_max_size=ec2_config["ec2_auto_scale"]["max_size"],
-        health_check_path=ec2_config["elb"]["health_check_path"],
-        health_check_port=ec2_config["elb"]["health_check_port"],
-        health_check_interval_seconds=ec2_config["elb"][
+        health_check_path=ec2_config["elastic_load_balancing"]["health_check_path"],
+        health_check_port=ec2_config["elastic_load_balancing"]["health_check_port"],
+        health_check_interval_seconds=ec2_config["elastic_load_balancing"][
             "health_check_interval_seconds"
         ],
-        health_check_timeout_seconds=ec2_config["elb"]["health_check_timeout_seconds"],
-        healthy_threshold_count=ec2_config["elb"]["healthy_threshold_count"],
+        health_check_timeout_seconds=ec2_config["elastic_load_balancing"][
+            "health_check_timeout_seconds"
+        ],
+        healthy_threshold_count=ec2_config["elastic_load_balancing"][
+            "healthy_threshold_count"
+        ],
     )
     copied_env = os.environ.copy()
     copied_env["AWS_DEFAULT_REGION"] = ec2_config["region"]
@@ -128,24 +129,3 @@ def deploy(bento_bundle_path, deployment_name, config_json):
             cwd=project_path,
             env=copied_env,
         )
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Deploy the bentoml bundle on EC2",
-        epilog="Check out https://github.com/bentoml/aws-ec2-deploy#readme to know more",
-    )
-    parser.add_argument("bento_bundle_path", help="Path to bentoml bundle")
-    parser.add_argument(
-        "deployment_name", help="The name you want to use for your deployment"
-    )
-    parser.add_argument(
-        "config_json",
-        help="(optional) The config file for your deployment",
-        default=os.path.join(os.getcwd(), "ec2_config.json"),
-        nargs="?",
-    )
-    args = parser.parse_args()
-
-    deploy(args.bento_bundle_path, args.deployment_name, args.config_json)
-    console.print("[bold green]Deployment Complete!")

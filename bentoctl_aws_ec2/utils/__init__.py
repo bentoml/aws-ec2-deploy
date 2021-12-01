@@ -68,6 +68,7 @@ def build_docker_image(
     context_path, image_tag, dockerfile="Dockerfile", additional_build_args=None
 ):
     docker_client = docker.from_env()
+    context_path = str(context_path)
     try:
         docker_client.images.build(
             path=context_path,
