@@ -36,6 +36,39 @@ $ bentoctl operator add aws-ec2
 ```
 $ bentoctl generate
 
+Bentoctl Interactive Deployment Spec Builder
+
+Welcome! You are now in interactive mode.
+
+This mode will help you setup the deployment_spec.yaml file required for
+deployment. Fill out the appropriate values for the fields.
+
+(deployment spec will be saved to: ./deployment_spec.yaml)
+
+api_version: v1
+metadata:
+    name: test
+    operator: aws-ec2
+spec:
+    bento: .
+    region: us-west-1
+    instance_type: t2.micro
+    ami_id: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    enable_gpus: False
+    ec2_auto_scale:
+        min_size: 1
+        desired_capacity: 1
+        max_size: 1
+    elastic_load_balancing:
+        health_check_interval_seconds: 5
+        health_check_path: /healthz
+        health_check_port: 5000
+        health_check_timeout_seconds: 3
+        healthy_threshold_count: 2
+    environment_variables:
+filename for deployment_spec [deployment_spec.yaml]:
+deployment spec file exists! Should I override? [Y/n]: y
+deployment spec generated to: deployment_spec.yaml
 ```
 
 4. Deploy to EC2
@@ -69,6 +102,9 @@ $ bentoctl deploy deployment_config.yaml --describe-deployment
     [0]%
 
 7. Delete deployment
+```
+$ bentoctl delete deployment_config.yaml
+```
 
 ## Quickstart with scripts
 
