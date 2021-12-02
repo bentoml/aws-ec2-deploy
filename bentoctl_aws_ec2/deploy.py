@@ -19,8 +19,8 @@ from .utils import (
 )
 
 
-def deploy(bento_bundle_path, deployment_name, ec2_config):
-    bento_metadata = load_bento_service_metadata(bento_bundle_path)
+def deploy(bento_path, deployment_name, deployment_spec):
+    bento_metadata = load_bento_service_metadata(bento_path)
 
     (
         template_name,
@@ -48,13 +48,15 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
 
     with console.status("Building image"):
         repository_id, registry_url = create_ecr_repository_if_not_exists(
-            ec2_config["region"], repo_name
+            deployment_spec["region"], repo_name
         )
-        _, username, password = get_ecr_login_info(ec2_config["region"], repository_id)
+        _, username, password = get_ecr_login_info(
+            deployment_spec["region"], repository_id
+        )
         ecr_tag = generate_docker_image_tag(
             registry_url, bento_metadata.name, bento_metadata.version
         )
-        build_docker_image(context_path=bento_bundle_path, image_tag=ecr_tag)
+        build_docker_image(context_path=bento_path, image_tag=ecr_tag)
 
     with console.status("Pushing image to ECR"):
         push_docker_image_to_repository(
@@ -65,9 +67,9 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
     encoded_user_data = generate_user_data_script(
         registry=registry_url,
         image_tag=ecr_tag,
-        region=ec2_config["region"],
-        env_vars=ec2_config.get("environment_variables", {}),
-        enable_gpus=ec2_config.get("enable_gpus", False),
+        region=deployment_spec["region"],
+        env_vars=deployment_spec.get("environment_variables", {}),
+        enable_gpus=deployment_spec.get("enable_gpus", False),
     )
 
     file_path = generate_cloudformation_template_file(
@@ -75,25 +77,31 @@ def deploy(bento_bundle_path, deployment_name, ec2_config):
         user_data=encoded_user_data,
         sam_template_name=template_name,
         elb_name=elb_name,
-        ami_id=ec2_config["ami_id"],
-        instance_type=ec2_config["instance_type"],
-        autoscaling_min_size=ec2_config["ec2_auto_scale"]["min_size"],
-        autoscaling_desired_capacity=ec2_config["ec2_auto_scale"]["desired_capacity"],
-        autoscaling_max_size=ec2_config["ec2_auto_scale"]["max_size"],
-        health_check_path=ec2_config["elastic_load_balancing"]["health_check_path"],
-        health_check_port=ec2_config["elastic_load_balancing"]["health_check_port"],
-        health_check_interval_seconds=ec2_config["elastic_load_balancing"][
+        ami_id=deployment_spec["ami_id"],
+        instance_type=deployment_spec["instance_type"],
+        autoscaling_min_size=deployment_spec["ec2_auto_scale"]["min_size"],
+        autoscaling_desired_capacity=deployment_spec["ec2_auto_scale"][
+            "desired_capacity"
+        ],
+        autoscaling_max_size=deployment_spec["ec2_auto_scale"]["max_size"],
+        health_check_path=deployment_spec["elastic_load_balancing"][
+            "health_check_path"
+        ],
+        health_check_port=deployment_spec["elastic_load_balancing"][
+            "health_check_port"
+        ],
+        health_check_interval_seconds=deployment_spec["elastic_load_balancing"][
             "health_check_interval_seconds"
         ],
-        health_check_timeout_seconds=ec2_config["elastic_load_balancing"][
+        health_check_timeout_seconds=deployment_spec["elastic_load_balancing"][
             "health_check_timeout_seconds"
         ],
-        healthy_threshold_count=ec2_config["elastic_load_balancing"][
+        healthy_threshold_count=deployment_spec["elastic_load_balancing"][
             "healthy_threshold_count"
         ],
     )
     copied_env = os.environ.copy()
-    copied_env["AWS_DEFAULT_REGION"] = ec2_config["region"]
+    copied_env["AWS_DEFAULT_REGION"] = deployment_spec["region"]
     console.print(f"Generated CF template [[b]{file_path}[/b]]")
 
     with console.status("Building CF template"):

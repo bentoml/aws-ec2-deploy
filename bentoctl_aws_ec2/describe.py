@@ -48,10 +48,10 @@ def get_endpoints_from_instance_address(instances):
     return all_endpoints
 
 
-def describe(deployment_name, ec2_config):
+def describe(deployment_name, deployment_spec):
     _, stack_name, _, _ = generate_ec2_resource_names(deployment_name)
 
-    cf_client = boto3.client("cloudformation", ec2_config["region"])
+    cf_client = boto3.client("cloudformation", deployment_spec["region"])
     result = cf_client.describe_stacks(StackName=stack_name)
     stack_info = result.get("Stacks")
     outputs = stack_info[0].get("Outputs")
@@ -59,7 +59,7 @@ def describe(deployment_name, ec2_config):
     outputs = {o["OutputKey"]: o["OutputValue"] for o in outputs}
     if "AutoScalingGroup" in outputs:
         info_json["InstanceDetails"] = get_instance_ip_from_scaling_group(
-            [outputs["AutoScalingGroup"]], ec2_config["region"]
+            [outputs["AutoScalingGroup"]], deployment_spec["region"]
         )
         info_json["Endpoints"] = get_endpoints_from_instance_address(
             info_json["InstanceDetails"]
