@@ -1,8 +1,6 @@
 import os
 import shutil
 
-from bentoml.saved_bundle import load_bento_service_metadata
-
 from .ec2 import (
     generate_cloudformation_template_file,
     generate_docker_image_tag,
@@ -14,13 +12,14 @@ from .utils import (
     console,
     create_ecr_repository_if_not_exists,
     get_ecr_login_info,
+    get_tag_from_path,
     push_docker_image_to_repository,
     run_shell_command,
 )
 
 
 def deploy(bento_path, deployment_name, deployment_spec):
-    bento_metadata = load_bento_service_metadata(bento_path)
+    bento_tag = get_tag_from_path(bento_path)
 
     (
         template_name,
@@ -31,7 +30,7 @@ def deploy(bento_path, deployment_name, deployment_spec):
 
     # make deployable folder and overide if found according to user pref
     project_path = os.path.join(
-        os.path.curdir, f"{bento_metadata.name}-{bento_metadata.version}-deployable"
+        os.path.curdir, f"{bento_tag.name}-{bento_tag.version}-deployable"
     )
     try:
         os.mkdir(project_path)
@@ -54,7 +53,7 @@ def deploy(bento_path, deployment_name, deployment_spec):
             deployment_spec["region"], repository_id
         )
         ecr_tag = generate_docker_image_tag(
-            registry_url, bento_metadata.name, bento_metadata.version
+            registry_url, bento_tag.name, bento_tag.version
         )
         build_docker_image(context_path=bento_path, image_tag=ecr_tag)
 
