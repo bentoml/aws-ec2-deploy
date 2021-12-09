@@ -1,12 +1,11 @@
 import base64
 import json
 import subprocess
-from pathlib import Path
 
 import boto3
 import docker
-import yaml
-from bentoml import Tag
+from bentoml._internal.bento import Bento
+import fs
 from rich.console import Console
 
 # The Rich console to be used in the scripts for pretty printing
@@ -98,12 +97,6 @@ def push_docker_image_to_repository(
         raise Exception(f"Failed to push docker image {image_tag}: {error}")
 
 
-def get_tag_from_path(path):
-    bento_file = Path(path, "bento.yaml")
-    try:
-        with open(bento_file, "r", encoding="utf-8") as f:
-            yaml_content = yaml.safe_load(f)
-    except yaml.YAMLError:
-        raise
-
-    return Tag(yaml_content["name"], yaml_content["version"])
+def get_tag_from_path(path: str):
+    bento = Bento.from_fs(fs.open_fs(path))
+    return bento.tag
