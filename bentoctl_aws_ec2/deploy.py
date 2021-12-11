@@ -136,3 +136,5 @@ def deploy(bento_path, deployment_name, deployment_spec):
             cwd=project_path,
             env=copied_env,
         )
+
+    return project_path
