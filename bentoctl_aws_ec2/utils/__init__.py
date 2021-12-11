@@ -4,7 +4,7 @@ import subprocess
 
 import boto3
 import docker
-from bentoml._internal.bento import Bento
+from bentoml.bentos import Bento
 import fs
 from rich.console import Console
 
