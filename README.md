@@ -9,6 +9,24 @@ AWS EC2 is a great choice for deploying containerized and load balanced services
 Its ability to autoscale and automated health checking features make it attractive to
 users who want to reduce cost and want to horizontally scale base on traffic.
 
+<!--ts-->
+
+## Table of Contents
+
+   * [Prerequisites](#prerequisites)
+   * [Quickstart with bentoctl](#quickstart-with-bentoctl)
+   * [Quickstart with scripts](#quickstart-with-scripts)
+   * [Configuration options](#configuration-options)
+   * [Deployment operations](#deployment-operations)
+      * [Create a deployment](#create-a-deployment)
+      * [Update a deployment](#update-a-deployment)
+      * [Get deployment's status and information](#get-deployments-status-and-information)
+      * [Delete deployment](#delete-deployment)
+
+<!-- Added by: jjmachan, at: Saturday 11 December 2021 10:39:25 AM IST -->
+
+<!--te-->
+
 ## Prerequisites
 
 - An active AWS account configured on the machine with AWS CLI installed and configured
