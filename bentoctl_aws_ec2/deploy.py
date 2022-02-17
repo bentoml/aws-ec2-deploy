@@ -74,7 +74,7 @@ def deploy(bento_path, deployment_name, deployment_spec):
     file_path = generate_cloudformation_template_file(
         project_dir=project_path,
         user_data=encoded_user_data,
-        sam_template_name=template_name,
+        cf_template_name=template_name,
         elb_name=elb_name,
         ami_id=deployment_spec["ami_id"],
         instance_type=deployment_spec["instance_type"],
@@ -99,42 +99,24 @@ def deploy(bento_path, deployment_name, deployment_spec):
             "healthy_threshold_count"
         ],
     )
-    copied_env = os.environ.copy()
-    copied_env["AWS_DEFAULT_REGION"] = deployment_spec["region"]
     console.print(f"Generated CF template [[b]{file_path}[/b]]")
 
-    with console.status("Building CF template"):
+    with console.status("Deploying EC2"):
         run_shell_command(
-            command=["sam", "build", "-t", template_name],
-            cwd=project_path,
-            env=copied_env,
-        )
-        run_shell_command(
-            command=[
-                "sam",
-                "package",
-                "--output-template-file",
-                "packaged.yaml",
-            ],
-            cwd=project_path,
-            env=copied_env,
-        )
-        console.print("Built CF template")
-
-    with console.status("Deploying to EC2"):
-        run_shell_command(
-            command=[
-                "sam",
+            [
+                "aws",
+                "--region",
+                deployment_spec["region"],
+                "cloudformation",
                 "deploy",
-                "--template-file",
-                "packaged.yaml",
                 "--stack-name",
                 stack_name,
+                "--template-file",
+                file_path,
                 "--capabilities",
                 "CAPABILITY_IAM",
-            ],
-            cwd=project_path,
-            env=copied_env,
+            ]
         )
 
+    return
     return project_path

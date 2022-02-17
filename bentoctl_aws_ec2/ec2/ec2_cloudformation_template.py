@@ -1,6 +1,5 @@
 EC2_CLOUDFORMATION_TEMPLATE = """\
 AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
 Description: BentoML load balanced template
 Parameters:
     AmazonLinux2LatestAmiId:

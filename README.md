@@ -32,7 +32,7 @@ users who want to reduce cost and want to horizontally scale base on traffic.
 - An active AWS account configured on the machine with AWS CLI installed and configured
     - Install instruction: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
     - Configure AWS account instruction: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
-- Latest version of `aws-cli > 2.0` and `sam-cli > 1.0`.
+- Latest version of `aws-cli > 2.0`.
 - Docker is installed and running on the machine.
     - Install instruction: https://docs.docker.com/install
 
