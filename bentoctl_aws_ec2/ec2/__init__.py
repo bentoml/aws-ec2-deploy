@@ -44,12 +44,12 @@ def generate_aws_compatible_string(*items, max_length=63):
 
 
 def generate_ec2_resource_names(name):
-    sam_template_name = generate_aws_compatible_string(f"{name}-template")
+    cf_template_name = generate_aws_compatible_string("cloudformation_template.yaml")
     deployment_stack_name = generate_aws_compatible_string(f"{name}-stack")
     repo_name = generate_aws_compatible_string(f"{name}-repo")
     elb_name = generate_aws_compatible_string(f"{name}-elb", max_length=32)
 
-    return sam_template_name, deployment_stack_name, repo_name, elb_name
+    return cf_template_name, deployment_stack_name, repo_name, elb_name
 
 
 def generate_docker_image_tag(registry_uri, bento_name, bento_version):
@@ -96,7 +96,7 @@ def generate_user_data_script(
 def generate_cloudformation_template_file(
     project_dir,
     user_data,
-    sam_template_name,
+    cf_template_name,
     elb_name,
     ami_id,
     instance_type,
@@ -114,7 +114,7 @@ def generate_cloudformation_template_file(
     args:
         project_dir: path to save template file
         user_data: base64 encoded user data for cloud-init script
-        sam_template_name: template name to save
+        cf_template_name: template name to save
         ami_id: ami id for EC2 container to use
         instance_type: EC2 instance type
         autocaling_min_size: autoscaling group minimum size
@@ -125,12 +125,12 @@ def generate_cloudformation_template_file(
     NOTE: SSH ACCESS TO INSTANCE MAY NOT BE REQUIRED
     """
 
-    template_file_path = os.path.join(project_dir, sam_template_name)
+    template_file_path = os.path.join(project_dir, cf_template_name)
     with open(template_file_path, "a") as f:
         f.write(
             EC2_CLOUDFORMATION_TEMPLATE.format(
                 ami_id=ami_id,
-                template_name=sam_template_name,
+                template_name=cf_template_name,
                 instance_type=instance_type,
                 user_data=user_data,
                 elb_name=elb_name,
