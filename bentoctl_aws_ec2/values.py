@@ -38,6 +38,7 @@ class DeploymentValues(UserDict):
         deployment_values = []
         for deployment_value_name, value in self.items():
             if type(value) == bool:
+                # False => false for terraform variables
                 deployment_values.append(
                     f'{deployment_value_name} = "{str(value).lower()}"'
                 )
