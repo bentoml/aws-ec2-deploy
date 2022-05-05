@@ -1,7 +1,7 @@
 # Bentoctl AWS EC2 deployment
 
-Bentoctl is a CLI tool for deploying your machine-learning models to any cloud platforms and serving predictions via REST APIs.
-It built on top of [BentoML: the unified model serving framework](https://github.com/bentoml/bentoml), and makes it easy to bring any BentoML packaged model to production.
+Bentoctl is a CLI tool for deploying your machine-learning models to any cloud platform and serving predictions via REST APIs.
+It is built on top of [BentoML: the unified model serving framework](https://github.com/bentoml/bentoml) and makes it easy to bring any BentoML packaged model to production.
 
 This repo contains the Bentoctl AWS EC2 deployment operator. This operator defines the terraform configuration for deploying a bento into an EC2 instance.
 
@@ -18,15 +18,15 @@ This repo contains the Bentoctl AWS EC2 deployment operator. This operator defin
 
 ## Quickstart with bentoctl
 
-This quickstart will walk you through deploying a bento into an EC2 instance. Make sure to go through the [prerequisites](#prerequisites) section follow the instructions to set everything up.
+This quickstart will walk you through deploying a bento into an EC2 instance. Make sure to go through the [prerequisites](#prerequisites) section and follow the instructions to set everything up.
 
 ### Prerequisites
 
 1. Bentoml - BentoML version 1.0 and greater. Please follow the [Installation guide](https://docs.bentoml.org/en/latest/quickstart.html#installation).
-2. Terraform - [Terraform](https://www.terraform.io/) is a tool for building, configuring, and managing infrastructure. Installation instruction: https://www.terraform.io/downloads
-3. AWS CLI installed and configured with an AWS account with permission to the Cloudformation, Lamba, API Gateway and ECR. Please follow the [Installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
-4. Docker - Install instruction: https://docs.docker.com/install instruction: https://www.terraform.io/downloads.html
-5. A built Bento project. For this guide, we will use the Iris classifier bento from the [BentoML quickstart guide](https://docs.bentoml.org/en/latest/quickstart.html#quickstart). You can also use your own bentos that are available locally.
+2. Terraform - [Terraform](https://www.terraform.io/) is a tool for building, configuring, and managing infrastructure. Installation instruction: www.terraform.io/downloads
+3. AWS CLI - installed and configured with an AWS account with permission to EC2 and ECR. Please follow the [Installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+4. Docker - Install instruction: [docs.docker.com/install](https://docs.docker.com/install)
+5. A built Bento project. For this guide, we will use the Iris classifier bento from the [BentoML quickstart guide](https://docs.bentoml.org/en/latest/quickstart.html#quickstart). You can also use your own Bentos that are available locally.
 
 ### Steps
 
@@ -45,7 +45,7 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
 3. Initialize deployment with bentoctl
 
-    Follow the interactive guide to initialize deployment project.
+    Follow the interactive guide to initialize the deployment project.
 
     ```bash
     $ bentoctl init
@@ -77,7 +77,7 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
     ```
     This will also run the `bentoctl generate` command for you and will generate the `main.tf` terraform file, which specifies the resources to be created and the `bentoctl.tfvars` file which contains the values for the variables used in the `main.tf` file.
 
-4. Build and push AWS EC2 comptable docker image to registry
+4. Build and push AWS EC2 compatible docker image to the registry
 
     Bentoctl will build and push the EC2 compatible docker image to the AWS ECR repository.
 
@@ -117,11 +117,11 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
       - ./bentoctl.tfvars
       - ./startup_script.sh
     ```
-    The iris-classifier service is no build and push into the container registry and the required terraform files have been created. Now we can use terraform to perform the deployment.
+    The iris-classifier service is now built and pushed into the container registry and the required terraform files have been created. Now we can use terraform to perform the deployment.
     
 5. Apply Deployment with Terraform
 
-   1. Initialize terraform project. This installs the aws provider and sets up the terraform folders.
+   1. Initialize terraform project. This installs the AWS provider and sets up the terraform folders.
       ```bash
       $ terraform init
       ```
@@ -175,11 +175,12 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
     0%
     ```
    
-   Please not that the EC2 instance might take some more time to pull the image and setup the bentoml server. You can check if the server is up by pinging the `/livez` endpoint
+   Please note that the EC2 instance might take some more time to pull the image and setup the bentoml server. You can check if the server is up by pinging the `/livez` endpoint.
    ```bash
    URL=$(terraform output -json | jq -r .ec2_ip_address.value)/livez
    curl $URL
    ```
+   If it doesn't start up after a few minutes refer to the [troubleshooting section](#troubleshooting)
 
 7. Delete deployment
     Use the `bentoctl destroy` command to remove the registry and the deployment
@@ -197,4 +198,80 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
 ## Troubleshooting
 
+  To run any troubleshooting we will have to connect to the EC2 instance. The EC2 instance created with terraform has EC2-connect configured by default but you will have to open the SSH port to connect to it.
+  
+  ### Open SSH port
+  
+  To open the SSH port, open the `main.tf` that has been generated and add an additional ingress rule into the `aws_security_group` resource named `allow_bentoml`. 
+  ```hcl
+  resource "aws_security_group" "allow_bentoml" {
+    name        = "${var.deployment_name}-bentoml-sg"
+    description = "SG for bentoml server"
 
+    ingress {
+      description      = "HTTP for bentoml"
+      from_port        = 80
+      to_port          = 80
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+
+    # add this to open SSH port for the EC2 instance.
+    ingress {
+      description      = "SSH access for server"
+      from_port        = 22
+      to_port          = 22
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+
+    egress {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  }
+```
+  Now you can run terraform apply again to make the changes to the resources.
+  ```bash
+  terraform apply -var-file=bentoctl.tfvars -auto-approve
+  ```
+  
+  ### Connect to the EC2 instance
+  You can connect to an instance using the Amazon EC2 console (browser-based client) by selecting the instance from the console and choosing to connect using EC2 Instance Connect. Instance Connect handles the permissions and provides a successful connection.
+
+To connect to your instance using the browser-based client from the Amazon EC2 console
+
+1. Open the Amazon EC2 console at https://console.aws.amazon.com/ec2/.
+2. In the navigation pane, choose Instances.
+3. Select the instance and choose Connect.
+4. Choose EC2 Instance Connect.
+5. Verify the user name and choose Connect to open a terminal window.
+
+For more information check out the [official docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-methods.html#ec2-instance-connect-connecting-console)
+
+### Check docker container logs
+Once connected, make sure the docker container is running by running
+```bash
+docker ps
+```
+This will show all the containers running. Ideally, you should see something like
+```
+CONTAINER ID   IMAGE                              COMMAND                  CREATED         STATUS        PORTS                                   NAMES
+4681b23e0c51   iris_classifier:kiouq7wmi2gmockr   "./env/docker/entryp…"   2 seconds ago   Up 1 second   0.0.0.0:80->3000/tcp, :::80->3000/tcp   bold_kirch
+```
+To view the logs from the container, run
+```
+docker logs <NAMES>
+```
+and it will output the logs from the container.
+
+### Check cloud-init script logs
+If the docker container is not running or if the `docker` command is not available in the ec2 instance then it could be an issue with the initialisation script. You can check the logs for the init-script by running
+```bash
+sudo cat /var/log/cloud-init-output.log
+```
