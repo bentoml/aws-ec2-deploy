@@ -1,9 +1,11 @@
-# Bentoctl AWS EC2 deployment
+<div align="center">
+    <h1>AWS EC2 Operator</h1>
+</div>
 
 Bentoctl is a CLI tool for deploying your machine-learning models to any cloud platform and serving predictions via REST APIs.
 It is built on top of [BentoML: the unified model serving framework](https://github.com/bentoml/bentoml) and makes it easy to bring any BentoML packaged model to production.
 
-This repo contains the Bentoctl AWS EC2 deployment operator. This operator defines the terraform configuration for deploying a bento into an EC2 instance.
+This repo contains the AWS EC2 deployment operator. This operator defines the terraform configuration for deploying a bento into an EC2 instance.
 
 
 > **Note:** This operator is compatible with BentoML version 1.0.0 and above. For older versions, please switch to the branch `pre-v1.0` and follow the instructions in the README.md.
