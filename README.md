@@ -1,293 +1,191 @@
-<div align="center">
-    <h1> AWS EC2 Operator </h1>
-    <p>
-        <img src="https://user-images.githubusercontent.com/5261489/144035885-7aad0b01-f8c7-41ea-8054-203c2d7eb9ad.png"/>
-    </p>
-</div>
+# Bentoctl AWS EC2 deployment
 
-AWS EC2 is a great choice for deploying containerized and load balanced services in the cloud.
-Its ability to autoscale and automated health checking features make it attractive to
-users who want to reduce cost and want to horizontally scale base on traffic.
+Bentoctl is a CLI tool for deploying your machine-learning models to any cloud platforms and serving predictions via REST APIs.
+It built on top of [BentoML: the unified model serving framework](https://github.com/bentoml/bentoml), and makes it easy to bring any BentoML packaged model to production.
 
-<!--ts-->
+This repo contains the Bentoctl AWS EC2 deployment operator. This operator defines the terraform configuration for deploying a bento into an EC2 instance.
+
+
+> **Note:** This operator is compatible with BentoML version 1.0.0 and above. For older versions, please switch to the branch `pre-v1.0` and follow the instructions in the README.md.
+
 
 ## Table of Contents
 
-   * [Prerequisites](#prerequisites)
    * [Quickstart with bentoctl](#quickstart-with-bentoctl)
-   * [Quickstart with scripts](#quickstart-with-scripts)
    * [Configuration options](#configuration-options)
-   * [Deployment operations](#deployment-operations)
-      * [Create a deployment](#create-a-deployment)
-      * [Update a deployment](#update-a-deployment)
-      * [Get deployment's status and information](#get-deployments-status-and-information)
-      * [Delete deployment](#delete-deployment)
 
-<!-- Added by: jjmachan, at: Saturday 11 December 2021 10:39:25 AM IST -->
-
-<!--te-->
-
-## Prerequisites
-
-- An active AWS account configured on the machine with AWS CLI installed and configured
-    - Install instruction: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
-    - Configure AWS account instruction: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
-- Latest version of `aws-cli > 2.0`.
-- Docker is installed and running on the machine.
-    - Install instruction: https://docs.docker.com/install
 
 ## Quickstart with bentoctl
 
-Bentoctl is a CLI tool that you can use to deploy bentos to EC2. It helps in configuring and managing your deployments super easy. 
+This quickstart will walk you through deploying a bento into an EC2 instance. Make sure to go through the [prerequisites](#prerequisites) section follow the instructions to set everything up.
+
+### Prerequisites
+
+1. Bentoml - BentoML version 1.0 and greater. Please follow the [Installation guide](https://docs.bentoml.org/en/latest/quickstart.html#installation).
+2. Terraform - [Terraform](https://www.terraform.io/) is a tool for building, configuring, and managing infrastructure. Installation instruction: https://www.terraform.io/downloads
+3. AWS CLI installed and configured with an AWS account with permission to the Cloudformation, Lamba, API Gateway and ECR. Please follow the [Installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+4. Docker - Install instruction: https://docs.docker.com/install instruction: https://www.terraform.io/downloads.html
+5. A built Bento project. For this guide, we will use the Iris classifier bento from the [BentoML quickstart guide](https://docs.bentoml.org/en/latest/quickstart.html#quickstart). You can also use your own bentos that are available locally.
+
+### Steps
 
 1. Install bentoctl via pip
-```
-$ pip install bentoctl
-```
+    ```
+    $ pip install --pre bentoctl
+    ```
 
-2. Add AWS EC2 operator
-```
-$ bentoctl operator add aws-ec2
-```
+2. Install AWS EC2 operator
 
-3. Generate deployment_config.yaml file for your deployment. The `bentoctl generate` command can be used to interactively create the `deployment_config.yaml` file which is used to configure the deployment.
-```
-$ bentoctl generate
+    Bentoctl will install the official AWS EC2 operator and its dependencies.
 
-Bentoctl Interactive Deployment Spec Builder
+    ```
+    $ bentoctl operator install aws-ec2
+    ```
 
-Welcome! You are now in interactive mode.
+3. Initialize deployment with bentoctl
 
-This mode will help you setup the deployment_spec.yaml file required for
-deployment. Fill out the appropriate values for the fields.
-
-(deployment spec will be saved to: ./deployment_spec.yaml)
-
-api_version: v1
-metadata:
-    name: test
-    operator: aws-ec2
-spec:
-    bento: .
-    region: us-west-1
-    instance_type: t2.micro
-    ami_id: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
-    enable_gpus: False
-    ec2_auto_scale:
-        min_size: 1
-        desired_capacity: 1
-        max_size: 1
-    elastic_load_balancing:
-        health_check_interval_seconds: 5
-        health_check_path: /healthz
-        health_check_port: 5000
-        health_check_timeout_seconds: 3
-        healthy_threshold_count: 2
-    environment_variables:
-filename for deployment_spec [deployment_spec.yaml]:
-deployment spec file exists! Should I override? [Y/n]: y
-deployment spec generated to: deployment_spec.yaml
-```
-
-4. Deploy to EC2
-```
-$ bentoctl deploy deployment_config.yaml --describe-deployment
-```
-
-6. Check endpoint. We will try and test the endpoint The url for the endpoint given in the output of the describe command or you can also check the API Gateway through the AWS console.
+    Follow the interactive guide to initialize deployment project.
 
     ```bash
-    $ curl -i \
+    $ bentoctl init
+    
+    Bentoctl Interactive Deployment Config Builder
+
+    Welcome! You are now in interactive mode.
+
+    This mode will help you setup the deployment_config.yaml file required for
+    deployment. Fill out the appropriate values for the fields.
+
+    (deployment config will be saved to: ./deployment_config.yaml)
+
+    api_version: v1
+    name: iris-classifier-ec2
+    operator: aws-ec2
+    template: terraform
+    spec:
+        region: ap-south-1
+        instance_type: t2.micro
+        ami_id: ami-0a3277ffce9146b74
+        enable_gpus: False
+        environment_variables:
+    filename for deployment_config [deployment_config.yaml]:
+    deployment config generated to: deployment_config.yaml
+    ✨ generated template files.
+      - ./main.tf
+      - ./bentoctl.tfvars
+    ```
+    This will also run the `bentoctl generate` command for you and will generate the `main.tf` terraform file, which specifies the resources to be created and the `bentoctl.tfvars` file which contains the values for the variables used in the `main.tf` file.
+
+4. Build and push AWS EC2 comptable docker image to registry
+
+    Bentoctl will build and push the Lambda compatible docker image to the AWS ECR repository.
+
+    ```bash
+    bentoctl build -b iris_classifier:latest -f deployment_config.yaml
+
+    Step 1/22 : FROM bentoml/bento-server:1.0.0a6-python3.8-debian-runtime
+     ---> 046bc2e28220
+    Step 2/22 : ARG UID=1034
+     ---> Using cache
+     ---> f44cfa910c52
+    Step 3/22 : ARG GID=1034
+     ---> Using cache
+     ---> e4d5aed007af
+    Step 4/22 : RUN groupadd -g $GID -o bentoml && useradd -m -u $UID -g $GID -o -r bentoml
+     ---> Using cache
+     ---> fa8ddcfa15cf
+    ...
+    Step 22/22 : CMD ["bentoml", "serve", ".", "--production"]
+     ---> Running in 28eccee2f650
+     ---> 98bc66e49cd9
+    Successfully built 98bc66e49cd9
+    Successfully tagged aws-ec2-iris_classifier:kiouq7wmi2gmockr
+    🔨 Image build!
+    Created the repository iris-classifier-ec2
+    The push refers to repository
+    [213386773652.dkr.ecr.ap-south-1.amazonaws.com/iris-classifier-ec2]
+    kiouq7wmi2gmockr: digest:
+    sha256:e1a468e6b9ceeed65b52d0ee2eac9e3cd1a57074eb94db9c263be60e4db98881 size: 3250
+    63984d77b4da: Pushed
+    2bc5eef20c91: Pushed
+    ...
+    da0af9cdde98: Layer already exists
+    e5baccb54724: Layer already exists
+    🚀 Image pushed!
+    ✨ generated template files.
+      - ./bentoctl.tfvars
+      - ./startup_script.sh
+    ```
+    The iris-classifier service is no build and push into the container registry and the required terraform files have been created. Now we can use terraform to perform the deployment.
+    
+5. Apply Deployment with Terraform
+
+   1. Initialize terraform project. This installs the aws provider and sets up the terraform folders.
+      ```bash
+      $ terraform init
+      ```
+
+   2. Apply terraform project to create Lambda deployment
+
+        ```bash
+        $ terraform apply -var-file=bentoctl.tfvars -auto-approve
+
+        aws_iam_role.ec2_role: Creating...
+        aws_security_group.allow_bentoml: Creating...
+        aws_security_group.allow_bentoml: Creation complete after 2s [id=sg-01d5baaa464ff58f9]
+        aws_iam_role.ec2_role: Creation complete after 3s [id=iris-classifier-ec2-iam]
+        aws_iam_instance_profile.ip: Creating...
+        aws_iam_instance_profile.ip: Creation complete after 1s [id=iris-classifier-ec2-instance-profile]
+        aws_launch_template.lt: Creating...
+        aws_launch_template.lt: Creation complete after 0s [id=lt-09d7717f0f1a56001]
+        aws_instance.app_server: Creating...
+        aws_instance.app_server: Still creating... [10s elapsed]
+        aws_instance.app_server: Still creating... [20s elapsed]
+        aws_instance.app_server: Still creating... [30s elapsed]
+        aws_instance.app_server: Still creating... [40s elapsed]
+        aws_instance.app_server: Creation complete after 43s [id=i-0d9767b74865dc0b0]
+
+        Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
+
+        Outputs:
+
+        ec2_instance_status = "running"
+        ec2_ip_address = "13.235.76.37"
+        ```
+
+6. Test deployed endpoint
+
+    The `iris_classifier` uses the `/classify` endpoint for receiving requests so the full URL for the classifier will be in the form `{EndpointUrl}/classify`
+
+    ```bash
+    URL=$(terraform output -json | jq -r .base_url.value)classify
+    curl -i \
       --header "Content-Type: application/json" \
       --request POST \
-      --data '[[5.1, 3.5, 1.4, 0.2]]' \
-      https://ps6f0sizt8.execute-api.us-west-2.amazonaws.com/predict
+      --data '[5.1, 3.5, 1.4, 0.2]' \
+      $URL
 
-    # Sample output
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 3
-    Connection: keep-alive
-    Date: Tue, 21 Jan 2020 22:43:17 GMT
-    x-amzn-RequestId: f49d29ed-c09c-4870-b362-4cf493556cf4
-    x-amz-apigw-id: GrC0AEHYPHcF3aA=
-    X-Amzn-Trace-Id: Root=1-5e277e7f-e9c0e4c0796bc6f4c36af98c;Sampled=0
-    X-Cache: Miss from cloudfront
-    Via: 1.1 bb248e7fabd9781d3ed921f068507334.cloudfront.net (CloudFront)
-    X-Amz-Cf-Pop: SFO5-C1
-    X-Amz-Cf-Id: HZzIJUcEUL8aBI0KcmG35rsG-71KSOcLUNmuYR4wdRb6MZupv9IOpA==
+    HTTP/2 200
+    date: Thu, 14 Apr 2022 23:02:45 GMT
+    content-type: application/json
+    content-length: 1
+    apigw-requestid: Ql8zbicdSK4EM5g=
 
-    [0]%
+    0%
+    ```
 
 7. Delete deployment
-```
-$ bentoctl delete deployment_config.yaml
-```
-
-## Quickstart with scripts
-
-You can also use this operator directly with the scripts provided. 
-
-1. Build and save Bento Bundle from [BentoML quick start guide](https://github.com/bentoml/BentoML/blob/master/guides/quick-start/bentoml-quick-start-guide.ipynb)
-
-2. Copy and change the [sample config file](ec2_config.json) given and change it according to your deployment specifications. Check out the [config section](#configuration-options) to find the different options available.
-
-3. Install required python packages 
-   `$ pip install -r requirements.txt`
-
-3. Create EC2 deployment with the deployment tool. 
-    
-    Run deploy script in the command line:
+    Use the `bentoctl destroy` command to remove the registry and the deployment
 
     ```bash
-    $ BENTO_BUNDLE_PATH=$(bentoml get IrisClassifier:latest --print-location -q)
-    $ ./deploy $BENTO_BUNDLE_PATH my-first-ec2-deployment ec2_config.json
+    bentoctl destroy -f deployment_config.yaml
     ```
-
-
-    Get EC2 deployment information and status
-
-    ```bash
-    $ ./describe my-first-ec2-deployment
-
-    # Sample output
-    {
-      "InstanceDetails": [
-        {
-          "instance_id": "i-03ff2d1b9b717a109",
-          "endpoint": "3.101.38.18",
-          "state": "InService",
-          "health_status": "Healthy"
-        }
-      ],
-      "Endpoints": [
-        "3.101.38.18:5000/"
-      ],
-      "S3Bucket": "my-ec2-deployment-storage",
-      "TargetGroup": "arn:aws:elasticloadbalancing:us-west-1:192023623294:targetgroup/my-ec-Targe-3G36XKKIJZV9/d773b029690c84d3",
-      "Url": "http://my-ec2-deployment-elb-2078733703.us-west-1.elb.amazonaws.com"
-    }
-    ```
-
-4. Make sample request against deployed service. The url for the endpoint given in the output of the describe command or you can also check the API Gateway through the AWS console.
-
-    ```bash
-    $ curl -i \
-      --header "Content-Type: application/json" \
-      --request POST \
-      --data '[[5.1, 3.5, 1.4, 0.2]]' \
-      https://ps6f0sizt8.execute-api.us-west-2.amazonaws.com/predict
-
-    # Sample output
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 3
-    Connection: keep-alive
-    Date: Tue, 21 Jan 2020 22:43:17 GMT
-    x-amzn-RequestId: f49d29ed-c09c-4870-b362-4cf493556cf4
-    x-amz-apigw-id: GrC0AEHYPHcF3aA=
-    X-Amzn-Trace-Id: Root=1-5e277e7f-e9c0e4c0796bc6f4c36af98c;Sampled=0
-    X-Cache: Miss from cloudfront
-    Via: 1.1 bb248e7fabd9781d3ed921f068507334.cloudfront.net (CloudFront)
-    X-Amz-Cf-Pop: SFO5-C1
-    X-Amz-Cf-Id: HZzIJUcEUL8aBI0KcmG35rsG-71KSOcLUNmuYR4wdRb6MZupv9IOpA==
-
-    [0]%
-    ```
-
-5. Delete EC2 deployment
-
-    ```bash
-    $ ./delete my-first-ec2-deployment
-    ```
-
 ## Configuration options
 
-* `region`: AWS region for EC2 deployment
-* `instance_type`: Instance type for the EC2 deployment. See https://aws.amazon.com/ec2/instance-types/ for more info.
-* `ami_id`: The Amazon machine image (AMI) used for launching EC2 instance. The default is `/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2`. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information.
-* `enable_gpus`: (Optional) To enable access to the GPUs if you're using GPU-accelerated instance_types.
-* `ec2_auto_scale`:
-  * `min_size`:  The minimum number of instances for the auto scale group.
-  * `desired_capacity`: The desired capacity for the auto scale group. Auto Scaling group will start by launching as many instances as are specified for desired capacity.
-  * `max_size`: The maximum number of instances for the auto scale group
-* `elastic_load_balancing`:
-  * `health_check_interval_seconds`: The approximate interval, in seconds, between health checks of an individual instance. Valid Range: Minimum value of 5. Maximum value of 300.
-  * `health_check_path.`: The URL path for health check. Default is `/healthz`
-  * `health_check_port`: Health check port. Default is `5000`
-  * `health_check_timeout_seconds`: The amount of time, in seconds, during which no response means a failed health check.
-  * `healthy_threshold_count`: The number of consecutive health checks successes required before moving the instance to the Healthy state. Valid Range: Minimum value of 2. Maximum value of 10.
-* `environment_variables`: This takes a list of dicts with `name` and `value` keys for ENVAR name and ENVAR value repsectively. They are passed into docker as environment variables. You can also use this to pass bentoml specific environment variable use this. eg `environment_variables: [{'name': 'BENTOML_MB_MAX_BATCH_SIZE': 'value': '300'}]`
+* `region`: AWS region for Lambda deployment
+* `timeout`: Timeout per request
+* `memory_size`: The memory for your function, set a value between 128 MB and 10,240 MB in 1-MB increments
+
+## Troubleshooting
 
 
-## Deployment operations
-
-### Create a deployment
-
-Use command line
-
-```bash
-python deploy.py <Bento_bundle_path> <Deployment_name> <Config_JSON default is ./ec2_config.json>
-```
-
-Example:
-
-```bash
-MY_BUNDLE_PATH=${bentoml get IrisClassifier:latest --print-location -q)
-python deploy.py $MY_BUNDLE_PATH my_first_deployment ec2_config.json
-```
-
-Use Python API
-
-```python
-from bentoctl_aws_ec2 import deploy
-
-deploy(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
-```
-
-
-
-### Update a deployment
-
-Use command line
-
-```bash
-python update.py <Bento_bundle_path> <Deployment_name> <Config_JSON>
-```
-
-Use Python API
-
-```python
-from bentoctl_aws_ec2 import update
-update(BENTO_BUNDLE_PATH, DEPLOYMENT_NAME, CONFIG_JSON)
-```
-
-### Get deployment's status and information
-
-Use command line
-
-```bash
-python describe.py <Deployment_name> <Config_JSON>
-```
-
-Use Python API
-
-```python
-from bentoctl_aws_ec2 import describe
-describe(DEPLOYMENT_NAME, CONFIG_JSON)
-```
-
-### Delete deployment
-
-Use command line
-
-```bash
-python delete.py <Deployment_name> <Config_JSON>
-```
-
-Use Python API
-
-```python
-from  bentoctl_aws_ec2 import delete
-delete(DEPLOYMENT_NAME, CONFIG_JSON)
-```
