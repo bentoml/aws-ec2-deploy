@@ -13,6 +13,7 @@ This repo contains the Bentoctl AWS EC2 deployment operator. This operator defin
 
    * [Quickstart with bentoctl](#quickstart-with-bentoctl)
    * [Configuration options](#configuration-options)
+   * [Troubleshooting](#troubleshooting)
 
 
 ## Quickstart with bentoctl
@@ -78,7 +79,7 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
 4. Build and push AWS EC2 comptable docker image to registry
 
-    Bentoctl will build and push the Lambda compatible docker image to the AWS ECR repository.
+    Bentoctl will build and push the EC2 compatible docker image to the AWS ECR repository.
 
     ```bash
     bentoctl build -b iris_classifier:latest -f deployment_config.yaml
@@ -125,7 +126,7 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
       $ terraform init
       ```
 
-   2. Apply terraform project to create Lambda deployment
+   2. Apply terraform project to create EC2 deployment
 
         ```bash
         $ terraform apply -var-file=bentoctl.tfvars -auto-approve
@@ -155,10 +156,10 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
 6. Test deployed endpoint
 
-    The `iris_classifier` uses the `/classify` endpoint for receiving requests so the full URL for the classifier will be in the form `{EndpointUrl}/classify`
+    The `iris_classifier` uses the `/classify` endpoint for receiving requests so the full URL for the classifier will be in the form `{EndpointUrl}/classify`.
 
     ```bash
-    URL=$(terraform output -json | jq -r .base_url.value)classify
+    URL=$(terraform output -json | jq -r .ec2_ip_address.value)/classify
     curl -i \
       --header "Content-Type: application/json" \
       --request POST \
@@ -173,6 +174,12 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
     0%
     ```
+   
+   Please not that the EC2 instance might take some more time to pull the image and setup the bentoml server. You can check if the server is up by pinging the `/livez` endpoint
+   ```bash
+   URL=$(terraform output -json | jq -r .ec2_ip_address.value)/livez
+   curl $URL
+   ```
 
 7. Delete deployment
     Use the `bentoctl destroy` command to remove the registry and the deployment
@@ -182,9 +189,11 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
     ```
 ## Configuration options
 
-* `region`: AWS region for Lambda deployment
-* `timeout`: Timeout per request
-* `memory_size`: The memory for your function, set a value between 128 MB and 10,240 MB in 1-MB increments
+* `region`: AWS region for deployment
+* `instance_type`: Instance type for the EC2 deployment.  See https://aws.amazon.com/ec2/instance-types/ for the entire list.
+* `ami_id`: Amazon Machine Image (AMI) used for the EC2 instance. Check out https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information.
+* `ennable_gpus`: If using GPU-accelerated instance_types then ennable this.
+* `environment_variables`: List of environment variables that should be passed to the instance.
 
 ## Troubleshooting
 
