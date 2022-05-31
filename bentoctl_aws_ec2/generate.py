@@ -63,6 +63,7 @@ def generate_startup_file(spec: dict, destination_dir: str):
             gpu_flag=gpu_flag,
             image_tag=spec.get("image_tag"),
             registry_url=registry_url,
+            region=spec.get("region")
         )
 
         startup_script.write(template)
