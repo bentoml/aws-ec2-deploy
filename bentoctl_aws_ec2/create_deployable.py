@@ -8,5 +8,5 @@ def create_deployable(
     destination_dir: str,
     bento_metadata: dict[str, Any],
     overwrite_deployable: bool,
-):
-    pass
+) -> str:
+    return destination_dir
