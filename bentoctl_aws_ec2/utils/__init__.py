@@ -4,8 +4,8 @@ import subprocess
 
 import boto3
 import docker
-from bentoml.bentos import Bento
 import fs
+from bentoml.bentos import Bento
 from rich.console import Console
 
 # The Rich console to be used in the scripts for pretty printing
