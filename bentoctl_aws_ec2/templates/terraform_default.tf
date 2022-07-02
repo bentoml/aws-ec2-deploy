@@ -137,9 +137,9 @@ resource "aws_instance" "app_server" {
 ################################################################################
 # Output value definitions
 ################################################################################
-output "ec2_ip_address" {
+output "endpoint" {
     description = "address of ec2 instance created. You can go to that URL to interate with the service"
-    value = aws_instance.app_server.public_ip
+    value = "http://${aws_instance.app_server.public_ip}"
 }
 
 output "ec2_instance_status" {
