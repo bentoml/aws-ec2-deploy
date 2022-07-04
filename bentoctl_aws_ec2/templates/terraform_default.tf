@@ -33,19 +33,19 @@ variable "ami_id" {
 }
 
 variable "enable_gpus" {
-    type = bool
+  type = bool
 }
 
 variable "image_repository" {
-    type = string
+  type = string
 }
 
 variable "image_version" {
-    type = string
+  type = string
 }
 
 variable "image_tag" {
-    type = string
+  type = string
 }
 
 ################################################################################
@@ -137,12 +137,12 @@ resource "aws_instance" "app_server" {
 ################################################################################
 # Output value definitions
 ################################################################################
-output "ec2_ip_address" {
-    description = "address of ec2 instance created. You can go to that URL to interate with the service"
-    value = aws_instance.app_server.public_ip
+output "endpoint" {
+  description = "address of ec2 instance created. You can go to that URL to interate with the service"
+  value       = "http://${aws_instance.app_server.public_ip}"
 }
 
 output "ec2_instance_status" {
-    description = "Status of the created instance"
-    value = aws_instance.app_server.instance_state
+  description = "Status of the created instance"
+  value       = aws_instance.app_server.instance_state
 }
