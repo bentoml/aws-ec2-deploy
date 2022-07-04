@@ -47,7 +47,7 @@ def generate_startup_file(spec: dict, destination_dir: str):
         return
 
     registry_url = spec.get("image_tag").split("/")[0]
-    if spec.get('enable_gpus') is True:
+    if spec.get("enable_gpus") is True:
         gpu_flag = "--gpus all"
     else:
         gpu_flag = ""
@@ -63,7 +63,7 @@ def generate_startup_file(spec: dict, destination_dir: str):
             gpu_flag=gpu_flag,
             image_tag=spec.get("image_tag"),
             registry_url=registry_url,
-            region=spec.get("region")
+            region=spec.get("region"),
         )
 
         startup_script.write(template)
