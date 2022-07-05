@@ -131,9 +131,10 @@ resource "aws_launch_template" "lt" {
 resource "aws_instance" "app_server" {
   launch_template {
     id = aws_launch_template.lt.id
+  }
 
-    provisioner "local-exec" {
-      command = <<-EOT
+  provisioner "local-exec" {
+    command = <<-EOT
         attempt_counter=0
         max_attempts=15
         printf 'waiting for server to start'
@@ -148,7 +149,6 @@ resource "aws_instance" "app_server" {
             sleep 15
         done
         EOT
-    }
   }
 }
 
