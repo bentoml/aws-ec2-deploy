@@ -132,6 +132,24 @@ resource "aws_instance" "app_server" {
   launch_template {
     id = aws_launch_template.lt.id
   }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+        attempt_counter=0
+        max_attempts=20
+        printf 'waiting for server to start'
+        until $(curl --output /dev/null --silent --head --fail http://${self.public_ip}); do
+            if [ $attempt_counter -eq $max_attempts ];then
+              echo "Max attempts reached"
+              exit 1
+            fi
+
+            printf '.'
+            attempt_counter=$(($attempt_counter+1))
+            sleep 15
+        done
+        EOT
+  }
 }
 
 ################################################################################
