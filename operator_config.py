@@ -13,10 +13,9 @@ OPERATOR_SCHEMA = {
     },
     "ami_id": {
         "type": "string",
-        "default": "ami-0a3277ffce9146b74",
         "help_message": "Amazon Machine Image (AMI) used for the EC2 instance. "
-        "Check out https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html "
-        "for more information.",
+        "Choose one from https://console.aws.amazon.com/ec2/home#AMICatalog."
+        "Note: Only Amazon Linux AMIs work at the current moment.",
     },
     "enable_gpus": {
         "type": "boolean",
