@@ -146,7 +146,7 @@ resource "aws_instance" "app_server" {
   provisioner "local-exec" {
     command = <<-EOT
         attempt_counter=0
-        max_attempts=20
+        max_attempts=40
         printf 'waiting for server to start'
         until $(curl --output /dev/null --silent --head --fail http://${self.public_ip}); do
             if [ $attempt_counter -eq $max_attempts ];then
