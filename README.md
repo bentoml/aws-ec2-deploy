@@ -194,7 +194,8 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
 * `region`: AWS region for deployment
 * `instance_type`: Instance type for the EC2 deployment.  See https://aws.amazon.com/ec2/instance-types/ for the entire list.
-* `ami_id`: Amazon Machine Image (AMI) used for the EC2 instance. Check out https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information.
+* `ami_id`: Amazon Machine Image (AMI) used for the EC2 instance. Check out https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html for more information. The list of available AMIs for your region is available at https://console.aws.amazon.com/ec2/home#AMICatalog. AMI Ids are region specific, so make sure you get the AMI Id for the region you want to deploy into.
+> Note: Only Amazon Linux AMIs are supported at the current moment. This is the limitation of the startup_script used.
 * `ennable_gpus`: If using GPU-accelerated instance_types then ennable this.
 * `environment_variables`: List of environment variables that should be passed to the instance.
 
