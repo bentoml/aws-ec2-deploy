@@ -34,7 +34,7 @@ This quickstart will walk you through deploying a bento into an EC2 instance. Ma
 
 1. Install bentoctl via pip
     ```
-    $ pip install --pre bentoctl
+    $ pip install bentoctl
     ```
 
 2. Install AWS EC2 operator
