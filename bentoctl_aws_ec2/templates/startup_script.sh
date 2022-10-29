@@ -9,5 +9,5 @@ unzip awscliv2.zip
 sudo ./aws/install
 ln -s /usr/bin/aws aws
 aws ecr get-login-password --region {region} |docker login --username AWS --password-stdin {registry_url}
-docker pull docker push {image_tag}
+docker pull {image_tag}
 docker run -p {SERVICE_PORT}:{BENTOML_PORT} {gpu_flag} {image_tag}
