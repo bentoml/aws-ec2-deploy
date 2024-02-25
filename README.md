@@ -1,6 +1,8 @@
-<div align="center">
-    <h1>AWS EC2 Operator</h1>
-</div>
+## ⚠️ BentoCTL project has been deprecated
+
+Plese see the latest BentoML documentation on OCI-container based deployment workflow: https://docs.bentoml.com/
+
+## AWS EC2 Operator
 
 Bentoctl is a CLI tool for deploying your machine-learning models to any cloud platform and serving predictions via REST APIs.
 It is built on top of [BentoML: the unified model serving framework](https://github.com/bentoml/bentoml) and makes it easy to bring any BentoML packaged model to production.
